@@ -1,0 +1,28 @@
+services:
+  dynamodb-local:
+    container_name: springboot-dynamodb-local
+    image: amazon/dynamodb-local
+    ports:
+      - 8881:8000
+    command: -jar DynamoDBLocal.jar -dbPath /data -sharedDb
+    volumes:
+      - ./dynamodb-data:/data
+    networks:
+      - springboot-dynamodb-network
+
+  dynamodb-admin:
+    container_name: springboot-dynamodb-admin
+    image: aaronshaf/dynamodb-admin:latest
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
+    ports:
+      - 8001:8001
+    depends_on:
+      - dynamodb-local
+    networks:
+      - springboot-dynamodb-network
+
+networks:
+  springboot-dynamodb-network:
+    name: springboot-dynamodb-network
+    driver: bridge

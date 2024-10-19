@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: springboot-dynamodb
+
+dynamodb:
+  endpoint: ${DYNAMODB_ENDPOINT}
+  region: ${DYNAMODB_REGION}
