@@ -5,7 +5,6 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*
 @DynamoDbBean
 data class MainTableEntity(
     @get:DynamoDbPartitionKey
-    @get:DynamoDbSecondaryPartitionKey(indexNames = ["EmailLSI"])
     var pk: String = "",
 
     @get:DynamoDbSortKey

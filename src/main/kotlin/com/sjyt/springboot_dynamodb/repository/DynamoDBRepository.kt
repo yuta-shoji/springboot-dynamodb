@@ -8,7 +8,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import java.util.stream.Collectors
 
 interface NoSQLRepository<Table> {
+    fun findAll(): List<Table>
     fun findAllByPK(pk: String): List<Table>
+    fun findAllByPKAndSortBetween(pk: String, startSk: String, endSk: String): List<Table>
     fun findByPKAndSK(pk: String, sk: String): Table?
     fun findAllByGSI(gsi: SecondaryIndex): List<Table>
     fun findAllByLSI(lsi: SecondaryIndex): List<Table>
@@ -17,6 +19,10 @@ interface NoSQLRepository<Table> {
 class DynamoDBRepository<Table>(
     private val dynamoDbTable: DynamoDbTable<Table>,
 ) : NoSQLRepository<Table> {
+    override fun findAll(): List<Table> {
+        return dynamoDbTable.scan().items().stream().collect(Collectors.toList())
+    }
+
     override fun findAllByPK(pk: String): List<Table> {
         val queryConditional = QueryConditional
             .keyEqualTo(
@@ -31,6 +37,26 @@ class DynamoDBRepository<Table>(
 
         return dynamoDbTable
             .query(request)
+            .stream()
+            .flatMap { page -> page.items().stream() }
+            .collect(Collectors.toList())
+    }
+
+    override fun findAllByPKAndSortBetween(pk: String, startSk: String, endSk: String): List<Table> {
+        val sortBetweenCondition = QueryConditional
+            .sortBetween(
+                Key.builder()
+                    .partitionValue(pk)
+                    .sortValue(startSk)
+                    .build(),
+                Key.builder()
+                    .partitionValue(pk)
+                    .sortValue(endSk)
+                    .build()
+            )
+
+        return dynamoDbTable
+            .query(sortBetweenCondition)
             .stream()
             .flatMap { page -> page.items().stream() }
             .collect(Collectors.toList())
