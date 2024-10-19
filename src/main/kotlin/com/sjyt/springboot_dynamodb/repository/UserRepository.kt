@@ -14,24 +14,34 @@ class DefaultUserRepository(
     private val dynamoDBRepository: NoSQLRepository<MainTableEntity>
 ): UserRepository {
     override fun findAllUsers(): List<User> {
-        return dynamoDBRepository.findAllByPK("USER")
-            .map {
-                User(
-                    name = it.userName,
-                    email = it.sk,
-                    age = it.age
-                )
-            }
+        return dynamoDBRepository
+            .findAllByPK("USER")
+            .toUsers()
     }
 
     override fun findUserByEmail(email: String): User? {
-        val mainTableEntity = dynamoDBRepository
-            .findByPKAndSK("USER", email) ?: return null
+        return dynamoDBRepository
+            .findByPKAndSK("USER", email)
+            .toUserOrNull()
+    }
 
+
+    private fun MainTableEntity?.toUserOrNull(): User? {
+        this ?: return null
         return User(
-            name = mainTableEntity.userName,
-            email = mainTableEntity.sk,
-            age = mainTableEntity.age
+            name = this.userName,
+            email = this.sk,
+            age = this.age
         )
+    }
+
+    private fun List<MainTableEntity>.toUsers(): List<User> {
+        return this.map {
+            User(
+                name = it.userName,
+                email = it.sk,
+                age = it.age
+            )
+        }
     }
 }
