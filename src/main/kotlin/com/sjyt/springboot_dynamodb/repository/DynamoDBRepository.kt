@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.model.SecondaryIndex
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
@@ -9,6 +10,8 @@ import java.util.stream.Collectors
 interface NoSQLRepository<Table> {
     fun findAllByPK(pk: String): List<Table>
     fun findByPKAndSK(pk: String, sk: String): Table?
+    fun findAllByGSI(gsi: SecondaryIndex): List<Table>
+    fun findAllByLSI(lsi: SecondaryIndex): List<Table>
 }
 
 class DynamoDBRepository<Table>(
@@ -44,5 +47,26 @@ class DynamoDBRepository<Table>(
         } catch(e: Exception) {
             null
         }
+    }
+
+    override fun findAllByGSI(gsi: SecondaryIndex): List<Table> {
+        val keyBuilder = Key.builder()
+            .partitionValue(gsi.pk)
+
+        gsi.sk ?.let { keyBuilder.sortValue(gsi.sk) }
+
+        val queryConditional = QueryConditional
+            .keyEqualTo(keyBuilder.build())
+
+        return dynamoDbTable
+            .index(gsi.indexName)
+            .query(queryConditional)
+            .stream()
+            .flatMap { page -> page.items().stream() }
+            .collect(Collectors.toList())
+    }
+
+    override fun findAllByLSI(lsi: SecondaryIndex): List<Table> {
+        return findAllByGSI(lsi)
     }
 }
