@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: springboot-dynamodb
+
+dynamodb:
+  endpoint: http://localhost:0000
+  region: some region
