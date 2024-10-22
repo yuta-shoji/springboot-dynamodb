@@ -29,7 +29,7 @@ class DefaultEventRepository(
         endDate: LocalDateTime
     ): List<Event> {
         return dynamoDBRepository
-            .findAllByPKAndSortBetween(
+            .findAllByPKAndSKBetween(
                 eventType.toString(),
                 startDate.toString(),
                 endDate.toString(),

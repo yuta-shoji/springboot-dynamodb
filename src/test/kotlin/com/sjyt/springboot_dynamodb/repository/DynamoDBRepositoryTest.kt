@@ -123,7 +123,7 @@ class DynamoDBRepositoryTest {
                         .build()
                 )
 
-            dynamoDbRepository.findAllByPKAndSortBetween(pk, startSk, endSk)
+            dynamoDbRepository.findAllByPKAndSKBetween(pk, startSk, endSk)
 
             verify(spyStubDynamoDbTable).query(expectedQueryConditional)
         }
@@ -138,7 +138,7 @@ class DynamoDBRepositoryTest {
             `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
             `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
 
-            val actualEntities = dynamoDbRepository.findAllByPKAndSortBetween("", "", "")
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKBetween("", "", "")
 
             assertEquals(expectedEntities, actualEntities)
         }

@@ -10,11 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 interface NoSQLRepository<Table> {
     fun findAll(): List<Table>
     fun findAllByPK(pk: String): List<Table>
-    fun findAllByPKAndSortBetween(
-        pk: String,
-        startSk: String,
-        endSk: String
-    ): List<Table>
+    fun findAllByPKAndSKBetween(pk: String, startSk: String, endSk: String): List<Table>
     fun findByPKAndSK(pk: String, sk: String): Table?
     fun findAllByGSI(gsi: SecondaryIndex): List<Table>
     fun findAllByLSI(lsi: SecondaryIndex): List<Table>
@@ -42,11 +38,7 @@ class DynamoDBRepository<Table>(
             .toEntities()
     }
 
-    override fun findAllByPKAndSortBetween(
-        pk: String,
-        startSk: String,
-        endSk: String
-    ): List<Table> {
+    override fun findAllByPKAndSKBetween(pk: String, startSk: String, endSk: String): List<Table> {
         val sortBetweenCondition = QueryConditional
             .sortBetween(
                 Key.builder()
