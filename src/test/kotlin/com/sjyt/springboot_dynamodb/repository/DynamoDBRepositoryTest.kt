@@ -181,6 +181,142 @@ class DynamoDBRepositoryTest {
     }
 
     @Nested
+    inner class FindAllByPKAndSKGreaterThan {
+        @Test
+        fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
+            val pk = 1
+            val sk = 2
+            val expectedQueryConditional = QueryConditional
+                .sortGreaterThan(
+                    Key.builder()
+                        .setPrimaryKeys(pk, sk)
+                        .build(),
+                )
+
+            dynamoDbRepository.findAllByPKAndSKGreaterThan(pk, sk)
+
+            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mock<PageIterable<TestEntity>>()
+            val page = mock<Page<TestEntity>>()
+            val expectedEntities = listOf(TestEntity("1"))
+
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKGreaterThan("", "")
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllByPKAndSKGreaterThanOrEqualTo {
+        @Test
+        fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
+            val pk = 1
+            val sk = 2
+            val expectedQueryConditional = QueryConditional
+                .sortGreaterThanOrEqualTo(
+                    Key.builder()
+                        .setPrimaryKeys(pk, sk)
+                        .build(),
+                )
+
+            dynamoDbRepository.findAllByPKAndSKGreaterThanOrEqualTo(pk, sk)
+
+            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mock<PageIterable<TestEntity>>()
+            val page = mock<Page<TestEntity>>()
+            val expectedEntities = listOf(TestEntity("1"))
+
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKGreaterThanOrEqualTo("", "")
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllByPKAndSKLessThan {
+        @Test
+        fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
+            val pk = 1
+            val sk = 2
+            val expectedQueryConditional = QueryConditional
+                .sortLessThan(
+                    Key.builder()
+                        .setPrimaryKeys(pk, sk)
+                        .build(),
+                )
+
+            dynamoDbRepository.findAllByPKAndSKLessThan(pk, sk)
+
+            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mock<PageIterable<TestEntity>>()
+            val page = mock<Page<TestEntity>>()
+            val expectedEntities = listOf(TestEntity("1"))
+
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKLessThan("", "")
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllByPKAndSKLessThanOrEqualTo {
+        @Test
+        fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
+            val pk = 1
+            val sk = 2
+            val expectedQueryConditional = QueryConditional
+                .sortLessThanOrEqualTo(
+                    Key.builder()
+                        .setPrimaryKeys(pk, sk)
+                        .build(),
+                )
+
+            dynamoDbRepository.findAllByPKAndSKLessThanOrEqualTo(pk, sk)
+
+            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mock<PageIterable<TestEntity>>()
+            val page = mock<Page<TestEntity>>()
+            val expectedEntities = listOf(TestEntity("1"))
+
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKLessThanOrEqualTo("", "")
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
     inner class FindByPKAndSK {
         @Test
         fun dynamoDbTableのgetItemメソッドに正しいKeyを渡す() {

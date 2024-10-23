@@ -13,9 +13,16 @@ interface NoSQLRepository<Table> {
     fun <PK> findAllByPK(pk: PK): List<Table>
     fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
     fun <PK, SK> findAllByPKAndSKBeginsWith(pk: PK, beginningOfSk: SK): List<Table>
+    fun <PK, SK> findAllByPKAndSKGreaterThan(pk: PK, sk: SK): List<Table>
+    fun <PK, SK> findAllByPKAndSKGreaterThanOrEqualTo(pk: PK, sk: SK): List<Table>
+    fun <PK, SK> findAllByPKAndSKLessThan(pk: PK, sk: SK): List<Table>
+    fun <PK, SK> findAllByPKAndSKLessThanOrEqualTo(pk: PK, sk: SK): List<Table>
+
     fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table?
+
     fun <GSIPK, GSISK> findAllByGSI(gsi: SecondaryIndex<GSIPK, GSISK>): List<Table>
     fun <LSIPK, LSISK> findAllByLSI(lsi: SecondaryIndex<LSIPK, LSISK>): List<Table>
+
     fun save(item: Table)
 }
 
@@ -65,7 +72,7 @@ class DynamoDBRepository<Table>(
         pk: PK,
         beginningOfSk: SK
     ): List<Table> {
-        val expectedQueryConditional = QueryConditional
+        val queryConditional = QueryConditional
             .sortBeginsWith(
                 Key.builder()
                     .setPrimaryKeys(pk, beginningOfSk)
@@ -73,7 +80,59 @@ class DynamoDBRepository<Table>(
             )
 
         return dynamoDbTable
-            .query(expectedQueryConditional)
+            .query(queryConditional)
+            .toEntities()
+    }
+
+    override fun <PK, SK> findAllByPKAndSKGreaterThan(pk: PK, sk: SK): List<Table> {
+        val queryConditional = QueryConditional
+            .sortGreaterThan(
+                Key.builder()
+                    .setPrimaryKeys(pk, sk)
+                    .build(),
+            )
+
+        return dynamoDbTable
+            .query(queryConditional)
+            .toEntities()
+    }
+
+    override fun <PK, SK> findAllByPKAndSKGreaterThanOrEqualTo(pk: PK, sk: SK): List<Table> {
+        val queryConditional = QueryConditional
+            .sortGreaterThanOrEqualTo(
+                Key.builder()
+                    .setPrimaryKeys(pk, sk)
+                    .build(),
+            )
+
+        return dynamoDbTable
+            .query(queryConditional)
+            .toEntities()
+    }
+
+    override fun <PK, SK> findAllByPKAndSKLessThan(pk: PK, sk: SK): List<Table> {
+        val queryConditional = QueryConditional
+            .sortLessThan(
+                Key.builder()
+                    .setPrimaryKeys(pk, sk)
+                    .build(),
+            )
+
+        return dynamoDbTable
+            .query(queryConditional)
+            .toEntities()
+    }
+
+    override fun <PK, SK> findAllByPKAndSKLessThanOrEqualTo(pk: PK, sk: SK): List<Table> {
+        val queryConditional = QueryConditional
+            .sortLessThanOrEqualTo(
+                Key.builder()
+                    .setPrimaryKeys(pk, sk)
+                    .build(),
+            )
+
+        return dynamoDbTable
+            .query(queryConditional)
             .toEntities()
     }
 
