@@ -1,11 +1,10 @@
 package com.sjyt.springboot_dynamodb.controller
 
 import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.model.OrderRequestBody
+import com.sjyt.springboot_dynamodb.model.toOrder
 import com.sjyt.springboot_dynamodb.service.OrderService
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/orders")
@@ -30,5 +29,10 @@ class OrderController(
     @GetMapping("/email/{email}")
     fun findOrdersByUserEmail(@PathVariable email: String): List<Order> {
         return orderService.findOrdersByUserEmail(email)
+    }
+
+    @PutMapping
+    fun saveNewOrder(@RequestBody body: OrderRequestBody) {
+        orderService.saveOrder(body.toOrder())
     }
 }

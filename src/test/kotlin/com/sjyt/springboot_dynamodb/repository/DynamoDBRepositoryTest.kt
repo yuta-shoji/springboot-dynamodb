@@ -1,6 +1,7 @@
 package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.model.GSI
+import com.sjyt.springboot_dynamodb.model.LSI
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -105,7 +106,7 @@ class DynamoDBRepositoryTest {
     }
 
     @Nested
-    inner class FindAllByPKAndSortBetween {
+    inner class FindAllByPKAndSKBetween {
         @Test
         fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
             val pk = "some pk"
@@ -155,7 +156,7 @@ class DynamoDBRepositoryTest {
                 .sortValue(sk)
                 .build()
 
-            dynamoDbRepository.findByPKAndSK(pk, sk)
+            dynamoDbRepository.findByPartitionKeys(pk, sk)
 
             verify(spyStubDynamoDbTable).getItem(expectedKey)
         }
@@ -165,7 +166,7 @@ class DynamoDBRepositoryTest {
             val expectedEntity = TestEntity("some text")
             `when`(spyStubDynamoDbTable.getItem(any<Key>())).thenReturn(expectedEntity)
 
-            val actualEntity = dynamoDbRepository.findByPKAndSK("", "")
+            val actualEntity = dynamoDbRepository.findByPartitionKeys("", "")
 
             assertEquals(expectedEntity, actualEntity)
         }
@@ -175,7 +176,7 @@ class DynamoDBRepositoryTest {
             `when`(spyStubDynamoDbTable.getItem(any<Key>()))
                 .thenThrow(UnsupportedOperationException())
 
-            val actualEntity = dynamoDbRepository.findByPKAndSK("", "")
+            val actualEntity = dynamoDbRepository.findByPartitionKeys("", "")
 
             assertNull(actualEntity)
         }
@@ -247,9 +248,78 @@ class DynamoDBRepositoryTest {
             `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
             `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
 
-            val actualEntities = dynamoDbRepository.findAllByGSI(GSI("", ""))
+            val actualEntities = dynamoDbRepository.findAllByGSI(GSI.withoutSk("", ""))
 
             assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllByLSI {
+        private lateinit var dynamoDbIndex: DynamoDbIndex<TestEntity>
+        private lateinit var pageIterable: PageIterable<TestEntity>
+        private lateinit var page: Page<TestEntity>
+
+        @BeforeEach
+        fun setup() {
+            dynamoDbIndex = mock()
+            pageIterable = mock()
+            page = mock()
+            `when`(page.items()).thenReturn(emptyList())
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.index(any())).thenReturn(dynamoDbIndex)
+            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+        }
+
+        @Test
+        fun dynamoDbTableのindexメソッドとqueryメソッドをただし順序で正しい引数を渡して呼ぶ() {
+            val expectedIndexName = "ExpectedIndexName"
+
+            dynamoDbRepository.findAllByLSI(LSI(expectedIndexName, "", ""))
+
+            val inOrder = inOrder(spyStubDynamoDbTable, dynamoDbIndex)
+            inOrder.verify(spyStubDynamoDbTable).index(any())
+            inOrder.verify(dynamoDbIndex).query(any<QueryConditional>())
+        }
+
+        @Test
+        fun `正しいQueryConditionをdynamoDbIndexのqueryメソッドに渡す`() {
+            val lsi = LSI("", "some pk", "some sk")
+            val expectedCondition = QueryConditional
+                .keyEqualTo(
+                    Key.builder()
+                        .partitionValue(lsi.pk)
+                        .sortValue(lsi.sk)
+                        .build()
+                )
+
+            dynamoDbRepository.findAllByLSI(lsi)
+
+            verify(dynamoDbIndex).query(expectedCondition)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドを返り値を正しいEntityの配列に変換して返す() {
+            val expectedEntities = listOf(TestEntity("1"))
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByLSI(LSI("", "", ""))
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class Save {
+        @Test
+        fun 受け取ったItemをdynamoDbTableのputItemメソッドに正しく渡して呼ぶ() {
+            val expectedItem = TestEntity("new item")
+
+            dynamoDbRepository.save(expectedItem)
+
+            verify(spyStubDynamoDbTable).putItem(expectedItem)
         }
     }
 }

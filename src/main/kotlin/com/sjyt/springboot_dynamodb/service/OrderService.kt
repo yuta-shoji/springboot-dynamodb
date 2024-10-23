@@ -9,6 +9,7 @@ interface OrderService {
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
+    fun saveOrder(order: Order)
 }
 
 @Service
@@ -33,5 +34,10 @@ class DefaultOrderService(
     override fun findOrdersByUserEmail(email: String): List<Order> {
         // Implement some business logic here
         return orderRepository.findOrdersByUserEmail(email)
+    }
+
+    override fun saveOrder(order: Order) {
+        // Implement some business logic here
+        orderRepository.saveOrder(order)
     }
 }

@@ -16,11 +16,11 @@ data class MainTableEntity(
     @get:DynamoDbSecondarySortKey(indexNames = ["EmailLSI"])
     var emailLsiSk: String = "",
 
-    var amount: Int = 0,
+    var amount: Int? = null,
 
-    var place: Int = 0,
+    var place: Int? = null,
 
-    var userName: String = "",
+    var userName: String? = null,
 
-    var age: Int = 0,
+    var age: Int? = null,
 )

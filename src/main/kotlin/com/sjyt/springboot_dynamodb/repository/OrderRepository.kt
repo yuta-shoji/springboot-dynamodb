@@ -11,6 +11,7 @@ interface OrderRepository {
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
+    fun saveOrder(order: Order)
 }
 
 @Repository
@@ -25,12 +26,12 @@ class DefaultOrderRepository(
 
     override fun findOrderById(id: String): Order? {
         return dynamoDBRepository
-            .findByPKAndSK("ORDER", id)
+            .findByPartitionKeys("ORDER", id)
             .toOrderOrNull()
     }
 
     override fun findOrdersByProductName(productName: String): List<Order> {
-        val gsi = GSI("ProductNameGSI", productName)
+        val gsi = GSI.withoutSk("ProductNameGSI", productName)
 
         return dynamoDBRepository
             .findAllByGSI(gsi)
@@ -45,13 +46,18 @@ class DefaultOrderRepository(
             .toOrders()
     }
 
+    override fun saveOrder(order: Order) {
+        dynamoDBRepository.save(order.toMainTableEntity())
+    }
+
     private fun MainTableEntity?.toOrderOrNull(): Order? {
         this ?: return null
         return Order(
             id = this.sk,
             productName = this.productName,
-            amount = this.amount,
-            place = this.place,
+            email = this.emailLsiSk,
+            amount = this.amount ?: 0,
+            place = this.place ?: 0,
         )
     }
 
@@ -60,9 +66,21 @@ class DefaultOrderRepository(
             Order(
                 id = it.sk,
                 productName = it.productName,
-                amount = it.amount,
-                place = it.place,
+                email = it.emailLsiSk,
+                amount = it.amount ?: 0,
+                place = it.place ?: 0,
             )
         }
+    }
+
+    private fun Order.toMainTableEntity(): MainTableEntity {
+        return MainTableEntity(
+            pk = "ORDER",
+            sk = this.id,
+            productName = this.productName,
+            emailLsiSk = this.email,
+            amount = this.amount,
+            place = this.place,
+        )
     }
 }

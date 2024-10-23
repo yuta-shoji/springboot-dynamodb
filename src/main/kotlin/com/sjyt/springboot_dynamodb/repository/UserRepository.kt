@@ -21,7 +21,7 @@ class DefaultUserRepository(
 
     override fun findUserByEmail(email: String): User? {
         return dynamoDBRepository
-            .findByPKAndSK("USER", email)
+            .findByPartitionKeys("USER", email)
             .toUserOrNull()
     }
 
@@ -29,18 +29,18 @@ class DefaultUserRepository(
     private fun MainTableEntity?.toUserOrNull(): User? {
         this ?: return null
         return User(
-            name = this.userName,
+            name = this.userName ?: "",
             email = this.sk,
-            age = this.age
+            age = this.age ?: 0
         )
     }
 
     private fun List<MainTableEntity>.toUsers(): List<User> {
         return this.map {
             User(
-                name = it.userName,
+                name = it.userName ?: "",
                 email = it.sk,
-                age = it.age
+                age = it.age ?: 0
             )
         }
     }

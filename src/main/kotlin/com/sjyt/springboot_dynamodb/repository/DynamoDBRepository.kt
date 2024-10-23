@@ -1,6 +1,7 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.extension.setPrimaryKey
+import com.sjyt.springboot_dynamodb.extension.setPK
+import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.extension.toEntities
 import com.sjyt.springboot_dynamodb.model.SecondaryIndex
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
@@ -9,11 +10,12 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 
 interface NoSQLRepository<Table> {
     fun findAll(): List<Table>
-    fun findAllByPK(pk: String): List<Table>
-    fun findAllByPKAndSKBetween(pk: String, startSk: String, endSk: String): List<Table>
-    fun findByPKAndSK(pk: String, sk: String): Table?
-    fun findAllByGSI(gsi: SecondaryIndex): List<Table>
-    fun findAllByLSI(lsi: SecondaryIndex): List<Table>
+    fun <PK> findAllByPK(pk: PK): List<Table>
+    fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
+    fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table?
+    fun <GSIPK, GSISK> findAllByGSI(gsi: SecondaryIndex<GSIPK, GSISK>): List<Table>
+    fun <LSIPK, LSISK> findAllByLSI(lsi: SecondaryIndex<LSIPK, LSISK>): List<Table>
+    fun save(item: Table)
 }
 
 class DynamoDBRepository<Table>(
@@ -25,11 +27,11 @@ class DynamoDBRepository<Table>(
             .toEntities()
     }
 
-    override fun findAllByPK(pk: String): List<Table> {
+    override fun <PK> findAllByPK(pk: PK): List<Table> {
         val queryConditional = QueryConditional
             .keyEqualTo(
                 Key.builder()
-                    .setPrimaryKey(pk)
+                    .setPK(pk)
                     .build()
             )
 
@@ -38,48 +40,67 @@ class DynamoDBRepository<Table>(
             .toEntities()
     }
 
-    override fun findAllByPKAndSKBetween(pk: String, startSk: String, endSk: String): List<Table> {
+    override fun <PK, SK> findAllByPKAndSKBetween(
+        pk: PK,
+        startSk: SK,
+        endSk: SK,
+    ): List<Table> {
         val sortBetweenCondition = QueryConditional
             .sortBetween(
                 Key.builder()
-                    .setPrimaryKey(pk, startSk)
+                    .setPrimaryKeys(pk, startSk)
                     .build(),
                 Key.builder()
-                    .setPrimaryKey(pk, endSk)
-                    .build()
+                    .setPrimaryKeys(pk, endSk)
+                    .build(),
             )
+
         return dynamoDbTable
             .query(sortBetweenCondition)
             .toEntities()
     }
 
-    override fun findByPKAndSK(pk: String, sk: String): Table? {
+    override fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table? {
         val key = Key.builder()
-            .setPrimaryKey(pk, sk)
+            .setPrimaryKeys(pk, sk)
             .build()
 
         return try {
             dynamoDbTable.getItem(key)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             null
         }
     }
 
-    override fun findAllByGSI(gsi: SecondaryIndex): List<Table> {
+    override fun <GSIPK, GSISK> findAllByGSI(
+        gsi: SecondaryIndex<GSIPK, GSISK>
+    ): List<Table> {
+        return findAllBySecondaryIndex(gsi)
+    }
+
+    override fun <LSIPK, LSISK> findAllByLSI(
+        lsi: SecondaryIndex<LSIPK, LSISK>
+    ): List<Table> {
+        return findAllBySecondaryIndex(lsi)
+    }
+
+    override fun save(item: Table) {
+        dynamoDbTable.putItem(item)
+    }
+
+    private fun <PK, SK> findAllBySecondaryIndex(
+        secondaryIndex: SecondaryIndex<PK, SK>
+    ): List<Table> {
         val queryConditional = QueryConditional
             .keyEqualTo(
                 Key.builder()
-                    .setPrimaryKey(gsi)
+                    .setPrimaryKeys(secondaryIndex)
                     .build()
             )
 
         return dynamoDbTable
-            .index(gsi.indexName)
+            .index(secondaryIndex.indexName)
             .query(queryConditional)
             .toEntities()
-    }
-
-    override fun findAllByLSI(lsi: SecondaryIndex): List<Table> {
-        return findAllByGSI(lsi)
     }
 }
