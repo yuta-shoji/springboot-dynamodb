@@ -12,6 +12,7 @@ interface NoSQLRepository<Table> {
     fun findAll(): List<Table>
     fun <PK> findAllByPK(pk: PK): List<Table>
     fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
+    fun <PK, SK> findAllByPKAndSKBeginsWith(pk: PK, beginningOfSk: SK): List<Table>
     fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table?
     fun <GSIPK, GSISK> findAllByGSI(gsi: SecondaryIndex<GSIPK, GSISK>): List<Table>
     fun <LSIPK, LSISK> findAllByLSI(lsi: SecondaryIndex<LSIPK, LSISK>): List<Table>
@@ -57,6 +58,22 @@ class DynamoDBRepository<Table>(
 
         return dynamoDbTable
             .query(sortBetweenCondition)
+            .toEntities()
+    }
+
+    override fun <PK, SK> findAllByPKAndSKBeginsWith(
+        pk: PK,
+        beginningOfSk: SK
+    ): List<Table> {
+        val expectedQueryConditional = QueryConditional
+            .sortBeginsWith(
+                Key.builder()
+                    .setPrimaryKeys(pk, beginningOfSk)
+                    .build(),
+            )
+
+        return dynamoDbTable
+            .query(expectedQueryConditional)
             .toEntities()
     }
 

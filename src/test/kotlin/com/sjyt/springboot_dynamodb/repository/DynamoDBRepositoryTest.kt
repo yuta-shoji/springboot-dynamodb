@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -140,6 +141,40 @@ class DynamoDBRepositoryTest {
             `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKBetween("", "", "")
+
+            assertEquals(expectedEntities, actualEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllByPKAndSKBeginsWith {
+        @Test
+        fun dynamoDbTableのqueryメソッドに正しいQueryConditionを渡す() {
+            val pk = "some pk"
+            val beginningOfSk = "beginning of sk"
+            val expectedQueryConditional = QueryConditional
+                .sortBeginsWith(
+                    Key.builder()
+                        .setPrimaryKeys(pk, beginningOfSk)
+                        .build(),
+                )
+
+            dynamoDbRepository.findAllByPKAndSKBeginsWith(pk, beginningOfSk)
+
+            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+        }
+
+        @Test
+        fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mock<PageIterable<TestEntity>>()
+            val page = mock<Page<TestEntity>>()
+            val expectedEntities = listOf(TestEntity("1"))
+
+            `when`(page.items()).thenReturn(expectedEntities)
+            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
+            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+
+            val actualEntities = dynamoDbRepository.findAllByPKAndSKBeginsWith("", "")
 
             assertEquals(expectedEntities, actualEntities)
         }

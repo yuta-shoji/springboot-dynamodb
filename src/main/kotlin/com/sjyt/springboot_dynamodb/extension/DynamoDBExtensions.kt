@@ -43,7 +43,7 @@ fun <PK> Key.Builder.setPK(pk: PK): Key.Builder {
     return this
 }
 
-fun <SK> Key.Builder.setSK(sk: SK?): Key.Builder {
+private fun <SK> Key.Builder.setSK(sk: SK?): Key.Builder {
     sk ?: return this
 
     when (sk) {
