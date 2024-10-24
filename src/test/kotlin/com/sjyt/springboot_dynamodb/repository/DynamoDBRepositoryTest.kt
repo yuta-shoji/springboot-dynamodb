@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
@@ -21,7 +22,10 @@ import kotlin.test.Test
 class DynamoDBRepositoryTest {
     data class TestEntity(
         val text: String
-    )
+    ): TableEntity {
+        override val tableName: String
+            get() = "test_table"
+    }
 
     @MockBean
     private lateinit var spyStubDynamoDbTable: DynamoDbTable<TestEntity>

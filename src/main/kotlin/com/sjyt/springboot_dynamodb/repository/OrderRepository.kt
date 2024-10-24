@@ -1,12 +1,13 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.config.dynamodb.DynamoDBRepositoryFactory
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
 import com.sjyt.springboot_dynamodb.model.Order
 import org.springframework.stereotype.Repository
 
-interface OrderRepository {
+interface OrderRepository: BaseRepository {
     fun findAllOrders(): List<Order>
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
@@ -16,8 +17,11 @@ interface OrderRepository {
 
 @Repository
 class DefaultOrderRepository(
-    private val dynamoDBRepository: NoSQLRepository<MainTableEntity>
+    dynamoDBRepositoryFactory: DynamoDBRepositoryFactory
 ): OrderRepository {
+    override val dynamoDBRepository = dynamoDBRepositoryFactory
+        .build<MainTableEntity>()
+
     override fun findAllOrders(): List<Order> {
         return dynamoDBRepository
             .findAllByPK("ORDER")

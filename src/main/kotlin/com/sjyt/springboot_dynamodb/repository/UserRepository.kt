@@ -1,18 +1,22 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.config.dynamodb.DynamoDBRepositoryFactory
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.model.User
 import org.springframework.stereotype.Repository
 
-interface UserRepository {
+interface UserRepository: BaseRepository {
     fun findAllUsers(): List<User>
     fun findUserByEmail(email: String): User?
 }
 
 @Repository
 class DefaultUserRepository(
-    private val dynamoDBRepository: NoSQLRepository<MainTableEntity>
+    dynamoDBRepositoryFactory: DynamoDBRepositoryFactory
 ): UserRepository {
+    override val dynamoDBRepository = dynamoDBRepositoryFactory
+        .build<MainTableEntity>()
+
     override fun findAllUsers(): List<User> {
         return dynamoDBRepository
             .findAllByPK("USER")

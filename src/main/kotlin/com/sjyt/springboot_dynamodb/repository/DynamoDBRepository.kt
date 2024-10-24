@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
+import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPK
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.extension.toEntities
@@ -8,7 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 
-interface NoSQLRepository<Table> {
+interface NoSQLRepository<Table: TableEntity> {
     fun findAll(): List<Table>
     fun <PK> findAllByPK(pk: PK): List<Table>
     fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
@@ -26,7 +27,7 @@ interface NoSQLRepository<Table> {
     fun save(item: Table)
 }
 
-class DynamoDBRepository<Table>(
+class DynamoDBRepository<Table: TableEntity>(
     private val dynamoDbTable: DynamoDbTable<Table>,
 ) : NoSQLRepository<Table> {
     override fun findAll(): List<Table> {

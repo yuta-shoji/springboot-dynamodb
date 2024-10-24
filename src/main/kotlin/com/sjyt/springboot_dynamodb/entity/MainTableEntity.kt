@@ -23,4 +23,7 @@ data class MainTableEntity(
     var userName: String? = null,
 
     var age: Int? = null,
-)
+): TableEntity {
+    override val tableName: String
+        get() = "main_table"
+}

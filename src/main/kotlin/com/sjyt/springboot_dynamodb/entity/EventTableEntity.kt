@@ -12,4 +12,7 @@ data class EventTableEntity(
 
     @get:DynamoDbSortKey
     var date: LocalDateTime = LocalDateTime.now(),
-)
+) : TableEntity {
+    override val tableName: String
+        get() = "event_table"
+}
