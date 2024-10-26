@@ -1,6 +1,8 @@
 package com.sjyt.springboot_dynamodb.service
 
+import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.repository.OrderAndEventResource
 import com.sjyt.springboot_dynamodb.repository.OrderRepository
 import org.springframework.stereotype.Service
 
@@ -10,6 +12,7 @@ interface OrderService {
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
     fun saveOrder(order: Order)
+    fun saveOrderAndEventInTransact(order: Order, event: Event)
 }
 
 @Service
@@ -39,5 +42,9 @@ class DefaultOrderService(
     override fun saveOrder(order: Order) {
         // Implement some business logic here
         orderRepository.saveOrder(order)
+    }
+
+    override fun saveOrderAndEventInTransact(order: Order, event: Event) {
+        orderRepository.saveOrderAndEventInTransact(order, event)
     }
 }

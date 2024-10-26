@@ -43,7 +43,7 @@ class DynamoDBRepositoryTest {
         pageIterable = mockk()
         page = mockk()
 
-        dynamoDbRepository = DynamoDBRepository(spyStubDynamoDbTable, spyStubDynamoDbEnhancedClient)
+        dynamoDbRepository = DynamoDBRepository(spyStubDynamoDbTable)
 
         every { page.items() } returns emptyList()
         every { pageIterable.iterator() } returns mutableListOf(page).iterator()
@@ -530,6 +530,18 @@ class DynamoDBRepositoryTest {
 
     @Nested
     inner class Delete {
+        @Test
+        fun 受け取ったItemをdynamoDbTableのdeleteメソッドに正しく渡して呼ぶ() {
+            val expectedItem = TestEntity("new item")
+
+            dynamoDbRepository.delete(expectedItem)
+
+            verify { spyStubDynamoDbTable.deleteItem(expectedItem) }
+        }
+    }
+
+    @Nested
+    inner class SaveAllInTransaction {
         @Test
         fun 受け取ったItemをdynamoDbTableのdeleteメソッドに正しく渡して呼ぶ() {
             val expectedItem = TestEntity("new item")

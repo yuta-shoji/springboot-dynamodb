@@ -1,6 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLRepositoryFactory
+import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
 import com.sjyt.springboot_dynamodb.entity.EventTableEntity
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
@@ -18,9 +18,9 @@ interface EventRepository: BaseRepository {
 
 @Repository
 class DefaultEventRepository(
-    dynamoDBFactory: NoSQLRepositoryFactory<EventTableEntity>,
+    dynamoDBFactory: NoSQLFactory<EventTableEntity>,
 ) : EventRepository {
-    override val dynamoDBRepository = dynamoDBFactory.build(EventTableEntity::class.java)
+    override val dynamoDBRepository = dynamoDBFactory.buildDynamoDBRepository(EventTableEntity::class.java)
 
     override fun findAllEvents(): List<Event> {
         return dynamoDBRepository.findAll().toEvents()

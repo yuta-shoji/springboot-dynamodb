@@ -1,25 +1,30 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLRepositoryFactory
+import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
+import com.sjyt.springboot_dynamodb.entity.EventTableEntity
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
+import com.sjyt.springboot_dynamodb.entity.TableEntity
+import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
 import com.sjyt.springboot_dynamodb.model.Order
 import org.springframework.stereotype.Repository
 
-interface OrderRepository: BaseRepository {
+interface OrderRepository: BaseRepository, EnhancedRepository {
     fun findAllOrders(): List<Order>
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
     fun saveOrder(order: Order)
+    fun saveOrderAndEventInTransact(order: Order, event: Event)
 }
 
 @Repository
 class DefaultOrderRepository(
-    dynamoDBFactory: NoSQLRepositoryFactory<MainTableEntity>,
+    dynamoDBFactory: NoSQLFactory<MainTableEntity>,
 ): OrderRepository {
-    override val dynamoDBRepository = dynamoDBFactory.build(MainTableEntity::class.java)
+    override val dynamoDBRepository = dynamoDBFactory.buildDynamoDBRepository(MainTableEntity::class.java)
+    override val dynamoDBEnhancedRepository: NoSQLEnhancedRepository = dynamoDBFactory.buildDynamoDBEnhancedRepository()
 
     override fun findAllOrders(): List<Order> {
         return dynamoDBRepository
@@ -53,6 +58,14 @@ class DefaultOrderRepository(
         dynamoDBRepository.save(order.toMainTableEntity())
     }
 
+    override fun saveOrderAndEventInTransact(order: Order, event: Event) {
+        val resources = listOf(
+            TransactResource(MainTableEntity::class, order.toMainTableEntity()),
+            TransactResource(EventTableEntity::class, event.toEventTableEntity()),
+        )
+        dynamoDBEnhancedRepository.saveInTransaction(resources)
+    }
+
     private fun MainTableEntity?.toOrderOrNull(): Order? {
         this ?: return null
         return Order(
@@ -75,15 +88,10 @@ class DefaultOrderRepository(
             )
         }
     }
-
-    private fun Order.toMainTableEntity(): MainTableEntity {
-        return MainTableEntity(
-            pk = "ORDER",
-            sk = this.id,
-            productName = this.productName,
-            emailLsiSk = this.email,
-            amount = this.amount,
-            place = this.place,
-        )
-    }
 }
+
+
+data class OrderAndEventResource(
+    val order: Order,
+    val event: Event,
+)

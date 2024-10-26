@@ -1,7 +1,7 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.SpyDynamoDBRepositoryFactory
-import com.sjyt.springboot_dynamodb.config.StubDynamoDBRepositoryFactory
+import com.sjyt.springboot_dynamodb.config.SpyDynamoDBFactory
+import com.sjyt.springboot_dynamodb.config.StubDynamoDBFactory
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.entity.MainTableEntityBuilder
 import com.sjyt.springboot_dynamodb.model.GSI
@@ -23,7 +23,7 @@ class DefaultOrderRepositoryTest {
     inner class Initializing {
         @Test
         fun 初期化時_dynamoDBRepositoryFactoryのbuildメソッドを正しく読んでいる() {
-            val spyDynamoDBRepositoryFactory = SpyDynamoDBRepositoryFactory<MainTableEntity>()
+            val spyDynamoDBRepositoryFactory = SpyDynamoDBFactory<MainTableEntity>()
 
             DefaultOrderRepository(spyDynamoDBRepositoryFactory)
 
@@ -35,7 +35,7 @@ class DefaultOrderRepositoryTest {
 
         @Test
         fun 初期化時_dynamoDBRepositoryFactoryのbuildメソッドが返すDynamoDBRepositoryをメンバーに保持する() {
-            val stubDynamoDBRepositoryFactory = StubDynamoDBRepositoryFactory<MainTableEntity>()
+            val stubDynamoDBRepositoryFactory = StubDynamoDBFactory<MainTableEntity>()
             val expectedDynamoDBRepository = DummyDynamoDBRepository<MainTableEntity>()
             stubDynamoDBRepositoryFactory.build_returnValue = expectedDynamoDBRepository
 
@@ -50,7 +50,7 @@ class DefaultOrderRepositoryTest {
 
     @Nested
     inner class Initialized {
-        private val stubDynamoDBRepositoryFactory = StubDynamoDBRepositoryFactory<MainTableEntity>()
+        private val stubDynamoDBRepositoryFactory = StubDynamoDBFactory<MainTableEntity>()
         private val mockDynamoDBRepository = mockk<NoSQLRepository<MainTableEntity>>(relaxed = true)
 
         @Nested
