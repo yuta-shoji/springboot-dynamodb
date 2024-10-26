@@ -9,7 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 
-interface NoSQLRepository<Table: TableEntity> {
+interface NoSQLRepository<Table : TableEntity> {
     fun findAll(): List<Table>
     fun <PK> findAllByPK(pk: PK): List<Table>
     fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
@@ -19,7 +19,7 @@ interface NoSQLRepository<Table: TableEntity> {
     fun <PK, SK> findAllByPKAndSKLessThan(pk: PK, sk: SK): List<Table>
     fun <PK, SK> findAllByPKAndSKLessThanOrEqualTo(pk: PK, sk: SK): List<Table>
 
-    fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table?
+    fun <PK, SK> findByPrimaryKeys(pk: PK, sk: SK): Table?
 
     fun <GSIPK, GSISK> findAllByGSI(gsi: SecondaryIndex<GSIPK, GSISK>): List<Table>
     fun <LSIPK, LSISK> findAllByLSI(lsi: SecondaryIndex<LSIPK, LSISK>): List<Table>
@@ -27,7 +27,7 @@ interface NoSQLRepository<Table: TableEntity> {
     fun save(item: Table)
 }
 
-class DynamoDBRepository<Table: TableEntity>(
+class DynamoDBRepository<Table : TableEntity>(
     private val dynamoDbTable: DynamoDbTable<Table>,
 ) : NoSQLRepository<Table> {
     override fun findAll(): List<Table> {
@@ -137,7 +137,7 @@ class DynamoDBRepository<Table: TableEntity>(
             .toEntities()
     }
 
-    override fun <PK, SK> findByPartitionKeys(pk: PK, sk: SK): Table? {
+    override fun <PK, SK> findByPrimaryKeys(pk: PK, sk: SK): Table? {
         val key = Key.builder()
             .setPrimaryKeys(pk, sk)
             .build()

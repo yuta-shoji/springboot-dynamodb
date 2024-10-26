@@ -1,6 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.dynamodb.DynamoDBRepositoryFactory
+import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLRepositoryFactory
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
@@ -17,10 +17,9 @@ interface OrderRepository: BaseRepository {
 
 @Repository
 class DefaultOrderRepository(
-    dynamoDBRepositoryFactory: DynamoDBRepositoryFactory
+    dynamoDBFactory: NoSQLRepositoryFactory<MainTableEntity>,
 ): OrderRepository {
-    override val dynamoDBRepository = dynamoDBRepositoryFactory
-        .build<MainTableEntity>()
+    override val dynamoDBRepository = dynamoDBFactory.build(MainTableEntity::class.java)
 
     override fun findAllOrders(): List<Order> {
         return dynamoDBRepository
@@ -30,7 +29,7 @@ class DefaultOrderRepository(
 
     override fun findOrderById(id: String): Order? {
         return dynamoDBRepository
-            .findByPartitionKeys("ORDER", id)
+            .findByPrimaryKeys("ORDER", id)
             .toOrderOrNull()
     }
 

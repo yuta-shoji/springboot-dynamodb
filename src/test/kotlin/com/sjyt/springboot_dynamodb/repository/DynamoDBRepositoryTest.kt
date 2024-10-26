@@ -321,7 +321,7 @@ class DynamoDBRepositoryTest {
     }
 
     @Nested
-    inner class FindByPKAndSK {
+    inner class FindByPrimaryKeys {
         @Test
         fun dynamoDbTableのgetItemメソッドに正しいKeyを渡す() {
             val pk = "some pk"
@@ -331,7 +331,7 @@ class DynamoDBRepositoryTest {
                 .sortValue(sk)
                 .build()
 
-            dynamoDbRepository.findByPartitionKeys(pk, sk)
+            dynamoDbRepository.findByPrimaryKeys(pk, sk)
 
             verify(spyStubDynamoDbTable).getItem(expectedKey)
         }
@@ -341,7 +341,7 @@ class DynamoDBRepositoryTest {
             val expectedEntity = TestEntity("some text")
             `when`(spyStubDynamoDbTable.getItem(any<Key>())).thenReturn(expectedEntity)
 
-            val actualEntity = dynamoDbRepository.findByPartitionKeys("", "")
+            val actualEntity = dynamoDbRepository.findByPrimaryKeys("", "")
 
             assertEquals(expectedEntity, actualEntity)
         }
@@ -351,7 +351,7 @@ class DynamoDBRepositoryTest {
             `when`(spyStubDynamoDbTable.getItem(any<Key>()))
                 .thenThrow(UnsupportedOperationException())
 
-            val actualEntity = dynamoDbRepository.findByPartitionKeys("", "")
+            val actualEntity = dynamoDbRepository.findByPrimaryKeys("", "")
 
             assertNull(actualEntity)
         }
