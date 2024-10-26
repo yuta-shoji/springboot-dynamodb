@@ -4,21 +4,23 @@ import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
-import software.amazon.awssdk.enhanced.dynamodb.model.*
-import java.lang.UnsupportedOperationException
+import software.amazon.awssdk.enhanced.dynamodb.model.Page
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 
-@SpringBootTest
 class DynamoDBRepositoryTest {
     data class TestEntity(
         val text: String
@@ -27,8 +29,8 @@ class DynamoDBRepositoryTest {
             get() = "test_table"
     }
 
-    @MockBean
     private lateinit var spyStubDynamoDbTable: DynamoDbTable<TestEntity>
+    private lateinit var spyStubDynamoDbEnhancedClient: DynamoDbEnhancedClient
 
     private lateinit var dynamoDbRepository: NoSQLRepository<TestEntity>
 
@@ -37,39 +39,41 @@ class DynamoDBRepositoryTest {
 
     @BeforeEach
     fun setup() {
-        dynamoDbRepository = DynamoDBRepository(spyStubDynamoDbTable)
+        spyStubDynamoDbTable = mockk(relaxed = true)
+        spyStubDynamoDbEnhancedClient = mockk()
+        pageIterable = mockk()
+        page = mockk()
 
-        pageIterable = mock()
-        page = mock()
-        `when`(page.items()).thenReturn(emptyList())
-        `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-        `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+        dynamoDbRepository = DynamoDBRepository(spyStubDynamoDbTable, spyStubDynamoDbEnhancedClient)
+
+        every { page.items() } returns emptyList()
+        every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+        every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
     }
 
     @Nested
     inner class FindAll {
         @Test
         fun dynamoDbTableのscanメソッドを呼んでいる() {
-            `when`(page.items()).thenReturn(emptyList())
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.scan()).thenReturn(pageIterable)
+            every { page.items() } returns emptyList()
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.scan() } returns pageIterable
 
             dynamoDbRepository.findAll()
 
-            verify(spyStubDynamoDbTable).scan()
+            verify { spyStubDynamoDbTable.scan() }
         }
 
         @Test
         fun dynamoDbTableのscanメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedTestEntities = listOf(
                 TestEntity("some text"),
             )
-
-            `when`(page.items()).thenReturn(expectedTestEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.scan()).thenReturn(pageIterable)
+            every { page.items() } returns expectedTestEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.scan() } returns pageIterable
 
             val actualTestEntities = dynamoDbRepository.findAll()
 
@@ -91,18 +95,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPK(pk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"), TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPK("")
 
@@ -131,18 +134,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKBetween(pk, startSk, endSk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKBetween("", "", "")
 
@@ -165,18 +167,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKBeginsWith(pk, beginningOfSk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKBeginsWith("", "")
 
@@ -199,18 +200,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKGreaterThan(pk, sk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKGreaterThan("", "")
 
@@ -233,18 +233,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKGreaterThanOrEqualTo(pk, sk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKGreaterThanOrEqualTo("", "")
 
@@ -267,18 +266,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKLessThan(pk, sk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKLessThan("", "")
 
@@ -301,18 +299,17 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByPKAndSKLessThanOrEqualTo(pk, sk)
 
-            verify(spyStubDynamoDbTable).query(expectedQueryConditional)
+            verify { spyStubDynamoDbTable.query(expectedQueryConditional) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドの返り値を正しいEntityの配列に変換して返す() {
-            val pageIterable = mock<PageIterable<TestEntity>>()
-            val page = mock<Page<TestEntity>>()
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
             val expectedEntities = listOf(TestEntity("1"))
-
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByPKAndSKLessThanOrEqualTo("", "")
 
@@ -333,13 +330,13 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findByPrimaryKeys(pk, sk)
 
-            verify(spyStubDynamoDbTable).getItem(expectedKey)
+            verify { spyStubDynamoDbTable.getItem(expectedKey) }
         }
 
         @Test
         fun 正常にデータを取得できた時_dynamoDbTableのgetItemsメソッドの返り値を返す() {
             val expectedEntity = TestEntity("some text")
-            `when`(spyStubDynamoDbTable.getItem(any<Key>())).thenReturn(expectedEntity)
+            every { spyStubDynamoDbTable.getItem(any<Key>()) } returns expectedEntity
 
             val actualEntity = dynamoDbRepository.findByPrimaryKeys("", "")
 
@@ -348,8 +345,8 @@ class DynamoDBRepositoryTest {
 
         @Test
         fun dynamoDbTableのgetItemsがエラーを投げた時_nullを返す() {
-            `when`(spyStubDynamoDbTable.getItem(any<Key>()))
-                .thenThrow(UnsupportedOperationException())
+            every { spyStubDynamoDbTable.getItem(any<Key>()) } throws UnsupportedOperationException()
+
 
             val actualEntity = dynamoDbRepository.findByPrimaryKeys("", "")
 
@@ -365,13 +362,13 @@ class DynamoDBRepositoryTest {
 
         @BeforeEach
         fun setup() {
-            dynamoDbIndex = mock()
-            pageIterable = mock()
-            page = mock()
-            `when`(page.items()).thenReturn(emptyList())
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.index(any())).thenReturn(dynamoDbIndex)
-            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+            dynamoDbIndex = mockk()
+            pageIterable = mockk()
+            page = mockk()
+            every { page.items() } returns emptyList()
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.index(any()) } returns dynamoDbIndex
+            every { dynamoDbIndex.query(any<QueryConditional>()) } returns pageIterable
         }
 
         @Test
@@ -380,9 +377,10 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByGSI(GSI(expectedIndexName, "", null))
 
-            val inOrder = inOrder(spyStubDynamoDbTable, dynamoDbIndex)
-            inOrder.verify(spyStubDynamoDbTable).index(any())
-            inOrder.verify(dynamoDbIndex).query(any<QueryConditional>())
+            verifyOrder {
+                spyStubDynamoDbTable.index(any())
+                dynamoDbIndex.query(any<QueryConditional>())
+            }
         }
 
         @Test
@@ -398,7 +396,7 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByGSI(skIsNotNullGST)
 
-            verify(dynamoDbIndex).query(expectedCondition)
+            verify { dynamoDbIndex.query(expectedCondition) }
         }
 
         @Test
@@ -413,15 +411,15 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByGSI(skIsNullGST)
 
-            verify(dynamoDbIndex).query(expectedCondition)
+            verify { dynamoDbIndex.query(expectedCondition) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドを返り値を正しいEntityの配列に変換して返す() {
             val expectedEntities = listOf(TestEntity("1"))
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { dynamoDbIndex.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByGSI(GSI.withoutSk("", ""))
 
@@ -437,13 +435,13 @@ class DynamoDBRepositoryTest {
 
         @BeforeEach
         fun setup() {
-            dynamoDbIndex = mock()
-            pageIterable = mock()
-            page = mock()
-            `when`(page.items()).thenReturn(emptyList())
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(spyStubDynamoDbTable.index(any())).thenReturn(dynamoDbIndex)
-            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+            dynamoDbIndex = mockk()
+            pageIterable = mockk()
+            page = mockk()
+            every { page.items() } returns emptyList()
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { spyStubDynamoDbTable.index(any()) } returns dynamoDbIndex
+            every { dynamoDbIndex.query(any<QueryConditional>()) } returns pageIterable
         }
 
         @Test
@@ -452,9 +450,10 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByLSI(LSI(expectedIndexName, "", ""))
 
-            val inOrder = inOrder(spyStubDynamoDbTable, dynamoDbIndex)
-            inOrder.verify(spyStubDynamoDbTable).index(any())
-            inOrder.verify(dynamoDbIndex).query(any<QueryConditional>())
+            verifyOrder {
+                spyStubDynamoDbTable.index(any())
+                dynamoDbIndex.query(any<QueryConditional>())
+            }
         }
 
         @Test
@@ -470,15 +469,15 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.findAllByLSI(lsi)
 
-            verify(dynamoDbIndex).query(expectedCondition)
+            verify { dynamoDbIndex.query(expectedCondition) }
         }
 
         @Test
         fun dynamoDbTableのqueryメソッドを返り値を正しいEntityの配列に変換して返す() {
             val expectedEntities = listOf(TestEntity("1"))
-            `when`(page.items()).thenReturn(expectedEntities)
-            `when`(pageIterable.iterator()).thenReturn(mutableListOf(page).iterator())
-            `when`(dynamoDbIndex.query(any<QueryConditional>())).thenReturn(pageIterable)
+            every { page.items() } returns expectedEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            every { dynamoDbIndex.query(any<QueryConditional>()) } returns pageIterable
 
             val actualEntities = dynamoDbRepository.findAllByLSI(LSI("", "", ""))
 
@@ -494,7 +493,19 @@ class DynamoDBRepositoryTest {
 
             dynamoDbRepository.save(expectedItem)
 
-            verify(spyStubDynamoDbTable).putItem(expectedItem)
+            verify { spyStubDynamoDbTable.putItem(expectedItem) }
+        }
+    }
+
+    @Nested
+    inner class Delete {
+        @Test
+        fun 受け取ったItemをdynamoDbTableのdeleteメソッドに正しく渡して呼ぶ() {
+            val expectedItem = TestEntity("new item")
+
+            dynamoDbRepository.delete(expectedItem)
+
+            verify { spyStubDynamoDbTable.deleteItem(expectedItem) }
         }
     }
 }

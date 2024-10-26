@@ -50,6 +50,9 @@ class DummyDynamoDBRepository<Table: TableEntity>: NoSQLRepository<Table> {
         return emptyList()
     }
 
+    override fun delete(item: Table) {
+    }
+
     override fun save(item: Table) {
     }
 }

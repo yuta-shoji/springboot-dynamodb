@@ -16,16 +16,16 @@ interface NoSQLRepositoryFactory<Table: TableEntity> {
 class DynamoDBRepositoryFactory<Table: TableEntity>(
     @Value("\${spring.profiles.active}")
     val environment: String,
-    val dynamoDbClient: DynamoDbEnhancedClient,
+    val dynamoDbEnhancedClient: DynamoDbEnhancedClient,
 ): NoSQLRepositoryFactory<Table> {
     override fun build(
         tableClass: Class<Table>
     ): NoSQLRepository<Table> {
         val instance = tableClass.getConstructor().newInstance()
-        val dynamoDBTable = dynamoDbClient.table(
+        val dynamoDBTable = dynamoDbEnhancedClient.table(
             "${instance.tableName}_$environment",
             TableSchema.fromBean(tableClass)
         )
-        return DynamoDBRepository(dynamoDBTable)
+        return DynamoDBRepository(dynamoDBTable, dynamoDbEnhancedClient)
     }
 }

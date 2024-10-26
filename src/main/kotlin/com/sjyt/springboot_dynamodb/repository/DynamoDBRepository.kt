@@ -5,6 +5,7 @@ import com.sjyt.springboot_dynamodb.extension.setPK
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.extension.toEntities
 import com.sjyt.springboot_dynamodb.model.SecondaryIndex
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
@@ -25,10 +26,12 @@ interface NoSQLRepository<Table : TableEntity> {
     fun <LSIPK, LSISK> findAllByLSI(lsi: SecondaryIndex<LSIPK, LSISK>): List<Table>
 
     fun save(item: Table)
+    fun delete(item: Table)
 }
 
 class DynamoDBRepository<Table : TableEntity>(
     private val dynamoDbTable: DynamoDbTable<Table>,
+    private val dynamoDbEnhancedClient: DynamoDbEnhancedClient,
 ) : NoSQLRepository<Table> {
     override fun findAll(): List<Table> {
         return dynamoDbTable
@@ -163,6 +166,10 @@ class DynamoDBRepository<Table : TableEntity>(
 
     override fun save(item: Table) {
         dynamoDbTable.putItem(item)
+    }
+
+    override fun delete(item: Table) {
+        dynamoDbTable.deleteItem(item)
     }
 
     private fun <PK, SK> findAllBySecondaryIndex(
