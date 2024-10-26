@@ -23,7 +23,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	testImplementation("junit:junit:4.13.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	implementation("software.amazon.awssdk:dynamodb-enhanced:2.28.16")
