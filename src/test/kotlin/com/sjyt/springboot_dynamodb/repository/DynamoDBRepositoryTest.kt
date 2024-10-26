@@ -4,10 +4,7 @@ import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import io.mockk.verifyOrder
+import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +17,8 @@ import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.Page
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 
 class DynamoDBRepositoryTest {
     data class TestEntity(
@@ -76,6 +75,38 @@ class DynamoDBRepositoryTest {
             every { spyStubDynamoDbTable.scan() } returns pageIterable
 
             val actualTestEntities = dynamoDbRepository.findAll()
+
+            assertEquals(expectedTestEntities, actualTestEntities)
+        }
+    }
+
+    @Nested
+    inner class FindAllWithLimit {
+        @Test
+        fun dynamoDbTableのscanメソッドをlimit設定の関数も含めてを正しく呼んでいる() {
+            every { page.items() } returns emptyList()
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            val request = ScanEnhancedRequest.builder().limit(100).build()
+            every { spyStubDynamoDbTable.scan(request) } returns pageIterable
+
+            dynamoDbRepository.findAllWithLimit(100)
+
+            verify { spyStubDynamoDbTable.scan(request) }
+        }
+
+        @Test
+        fun dynamoDbTableのscanメソッドの返り値を正しいEntityの配列に変換して返す() {
+            val pageIterable = mockk<PageIterable<TestEntity>>()
+            val page = mockk<Page<TestEntity>>()
+            val expectedTestEntities = listOf(
+                TestEntity("some text"),
+            )
+            every { page.items() } returns expectedTestEntities
+            every { pageIterable.iterator() } returns mutableListOf(page).iterator()
+            val request = ScanEnhancedRequest.builder().limit(100).build()
+            every { spyStubDynamoDbTable.scan(request) } returns pageIterable
+
+            val actualTestEntities = dynamoDbRepository.findAllWithLimit(100)
 
             assertEquals(expectedTestEntities, actualTestEntities)
         }

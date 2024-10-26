@@ -10,6 +10,10 @@ class DummyDynamoDBRepository<Table: TableEntity>: NoSQLRepository<Table> {
         return emptyList()
     }
 
+    override fun findAllWithLimit(limit: Int): List<Table> {
+        return emptyList()
+    }
+
     override fun <PK> findAllByPK(pk: PK): List<Table> {
         return emptyList()
     }

@@ -9,9 +9,11 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 
 interface NoSQLRepository<Table : TableEntity> {
     fun findAll(): List<Table>
+    fun findAllWithLimit(limit: Int): List<Table>
     fun <PK> findAllByPK(pk: PK): List<Table>
     fun <PK, SK> findAllByPKAndSKBetween(pk: PK, startSk: SK, endSk: SK): List<Table>
     fun <PK, SK> findAllByPKAndSKBeginsWith(pk: PK, beginningOfSk: SK): List<Table>
@@ -37,6 +39,11 @@ class DynamoDBRepository<Table : TableEntity>(
         return dynamoDbTable
             .scan()
             .toEntities()
+    }
+
+    override fun findAllWithLimit(limit: Int): List<Table> {
+        val request = ScanEnhancedRequest.builder().limit(limit).build()
+        return dynamoDbTable.scan(request).toEntities()
     }
 
     override fun <PK> findAllByPK(pk: PK): List<Table> {
