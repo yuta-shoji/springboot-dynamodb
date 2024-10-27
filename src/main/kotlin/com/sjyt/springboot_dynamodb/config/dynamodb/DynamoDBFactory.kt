@@ -33,6 +33,6 @@ class DynamoDBFactory<Table: TableEntity>(
     }
 
     override fun buildDynamoDBEnhancedRepository(): NoSQLEnhancedRepository {
-        return DynamoDBEnhancedRepository(dynamoDbEnhancedClient)
+        return DynamoDBEnhancedRepository(environment, dynamoDbEnhancedClient)
     }
 }

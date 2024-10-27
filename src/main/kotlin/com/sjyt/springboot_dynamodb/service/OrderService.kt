@@ -2,7 +2,6 @@ package com.sjyt.springboot_dynamodb.service
 
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.Order
-import com.sjyt.springboot_dynamodb.repository.OrderAndEventResource
 import com.sjyt.springboot_dynamodb.repository.OrderRepository
 import org.springframework.stereotype.Service
 
@@ -45,6 +44,7 @@ class DefaultOrderService(
     }
 
     override fun saveOrderAndEventInTransact(order: Order, event: Event) {
+        // Implement some business logic here
         orderRepository.saveOrderAndEventInTransact(order, event)
     }
 }

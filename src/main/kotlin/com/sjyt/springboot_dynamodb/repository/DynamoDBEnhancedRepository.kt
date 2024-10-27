@@ -3,28 +3,24 @@ package com.sjyt.springboot_dynamodb.repository
 import com.sjyt.springboot_dynamodb.entity.TableEntity
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
-import kotlin.reflect.KClass
-
-data class TransactResource<out Table : TableEntity>(
-    val table: KClass<out Table>,
-    val item: Table,
-)
 
 interface NoSQLEnhancedRepository {
-    fun <Table : TableEntity> saveInTransaction(resources: List<TransactResource<Table>>)
+    fun saveInTransaction(items: List<TableEntity>)
 }
 
 class DynamoDBEnhancedRepository(
+    private val environment: String,
     private val dynamoDbEnhancedClient: DynamoDbEnhancedClient,
 ) : NoSQLEnhancedRepository {
-    override fun <Table : TableEntity> saveInTransaction(resources: List<TransactResource<Table>>) {
+    override fun saveInTransaction(items: List<TableEntity>) {
         dynamoDbEnhancedClient.transactWriteItems {
-            resources.forEach { resource ->
+            items.forEach { item ->
+                val instance = item.javaClass.getConstructor().newInstance()
                 val dynamoDBTable = dynamoDbEnhancedClient.table(
-                    resource.item.tableName,
-                    TableSchema.fromBean(resource.table.java)
+                    "${instance.tableName}_$environment",
+                    TableSchema.fromBean(item.javaClass)
                 )
-                it.addPutItem(dynamoDBTable, resource.item)
+                it.addPutItem(dynamoDBTable, item)
             }
         }
     }

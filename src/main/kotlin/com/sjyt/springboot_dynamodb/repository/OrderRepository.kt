@@ -1,9 +1,7 @@
 package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
-import com.sjyt.springboot_dynamodb.entity.EventTableEntity
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
-import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.GSI
 import com.sjyt.springboot_dynamodb.model.LSI
@@ -59,11 +57,11 @@ class DefaultOrderRepository(
     }
 
     override fun saveOrderAndEventInTransact(order: Order, event: Event) {
-        val resources = listOf(
-            TransactResource(MainTableEntity::class, order.toMainTableEntity()),
-            TransactResource(EventTableEntity::class, event.toEventTableEntity()),
+        val items = listOf(
+            order.toMainTableEntity(),
+            event.toEventTableEntity(),
         )
-        dynamoDBEnhancedRepository.saveInTransaction(resources)
+        dynamoDBEnhancedRepository.saveInTransaction(items)
     }
 
     private fun MainTableEntity?.toOrderOrNull(): Order? {
@@ -89,9 +87,3 @@ class DefaultOrderRepository(
         }
     }
 }
-
-
-data class OrderAndEventResource(
-    val order: Order,
-    val event: Event,
-)
