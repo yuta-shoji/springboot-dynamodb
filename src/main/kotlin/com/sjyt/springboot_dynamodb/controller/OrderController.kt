@@ -1,6 +1,8 @@
 package com.sjyt.springboot_dynamodb.controller
 
 import com.sjyt.springboot_dynamodb.model.*
+import com.sjyt.springboot_dynamodb.model.request.BatchRequestBodyWithOrderAndEvent
+import com.sjyt.springboot_dynamodb.repository.OrdersAndEvents
 import com.sjyt.springboot_dynamodb.service.OrderService
 import org.springframework.web.bind.annotation.*
 
@@ -42,5 +44,13 @@ class OrderController(
             body.order.toOrder(),
             body.event.toEvent(),
         )
+    }
+
+    @PostMapping("/batch/event")
+    fun batchGetOrderAndEvent(
+        @RequestBody body: BatchRequestBodyWithOrderAndEvent,
+    ): OrdersAndEvents {
+        return orderService
+            .batchGetOrderAndEvent(body.orderPrimaryKeys, body.eventPrimaryKeys)
     }
 }

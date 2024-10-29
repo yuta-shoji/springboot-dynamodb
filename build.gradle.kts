@@ -3,6 +3,7 @@ plugins {
 	kotlin("plugin.spring") version "1.9.25"
 	id("org.springframework.boot") version "3.3.4"
 	id("io.spring.dependency-management") version "1.1.6"
+	kotlin("plugin.noarg") version "1.9.25"
 }
 
 group = "com.sjyt"
@@ -30,6 +31,10 @@ dependencies {
 	implementation("software.amazon.awssdk:dynamodb:2.28.16")
 
 	testImplementation("io.mockk:mockk:1.13.12")
+}
+
+noArg {
+	annotation("software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean")
 }
 
 kotlin {

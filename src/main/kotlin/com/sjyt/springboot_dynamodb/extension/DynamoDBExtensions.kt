@@ -16,7 +16,7 @@ fun <Table> SdkIterable<Page<Table>>.toEntities(): List<Table> {
     return this.flatMap { it.items() }
 }
 
-fun <PK, SK> Key.Builder.setPrimaryKeys(pk: PK, sk: SK): Key.Builder {
+fun <PK, SK> Key.Builder.setPrimaryKeys(pk: PK, sk: SK?): Key.Builder {
     this
         .setPK(pk)
         .setSK(sk)

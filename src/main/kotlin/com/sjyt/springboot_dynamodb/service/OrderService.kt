@@ -2,7 +2,9 @@ package com.sjyt.springboot_dynamodb.service
 
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
 import com.sjyt.springboot_dynamodb.repository.OrderRepository
+import com.sjyt.springboot_dynamodb.repository.OrdersAndEvents
 import org.springframework.stereotype.Service
 
 interface OrderService {
@@ -12,6 +14,10 @@ interface OrderService {
     fun findOrdersByUserEmail(email: String): List<Order>
     fun saveOrder(order: Order)
     fun saveOrderAndEventInTransact(order: Order, event: Event)
+    fun batchGetOrderAndEvent(
+        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+        eventPrimaryKeys: List<PrimaryKey<String, String>>,
+    ): OrdersAndEvents
 }
 
 @Service
@@ -46,5 +52,13 @@ class DefaultOrderService(
     override fun saveOrderAndEventInTransact(order: Order, event: Event) {
         // Implement some business logic here
         orderRepository.saveOrderAndEventInTransact(order, event)
+    }
+
+    override fun batchGetOrderAndEvent(
+        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+        eventPrimaryKeys: List<PrimaryKey<String, String>>
+    ): OrdersAndEvents {
+        return orderRepository
+            .batchGetOrderAndEvent(orderPrimaryKeys, eventPrimaryKeys)
     }
 }

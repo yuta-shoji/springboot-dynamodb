@@ -1,26 +1,34 @@
 package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
-import com.sjyt.springboot_dynamodb.entity.MainTableEntity
-import com.sjyt.springboot_dynamodb.model.Event
-import com.sjyt.springboot_dynamodb.model.GSI
-import com.sjyt.springboot_dynamodb.model.LSI
-import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.entity.*
+import com.sjyt.springboot_dynamodb.model.*
+import com.sjyt.springboot_dynamodb.model.request.BatchResource
+import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
 import org.springframework.stereotype.Repository
 
-interface OrderRepository: BaseRepository, EnhancedRepository {
+interface OrderRepository : BaseRepository, EnhancedRepository {
     fun findAllOrders(): List<Order>
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
     fun saveOrder(order: Order)
     fun saveOrderAndEventInTransact(order: Order, event: Event)
+    fun batchGetOrderAndEvent(
+        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+        eventPrimaryKeys: List<PrimaryKey<String, String>>,
+    ): OrdersAndEvents
 }
+
+data class OrdersAndEvents(
+    val orders: List<Order>,
+    val events: List<Event>,
+)
 
 @Repository
 class DefaultOrderRepository(
     dynamoDBFactory: NoSQLFactory<MainTableEntity>,
-): OrderRepository {
+) : OrderRepository {
     override val dynamoDBRepository = dynamoDBFactory.buildDynamoDBRepository(MainTableEntity::class.java)
     override val dynamoDBEnhancedRepository: NoSQLEnhancedRepository = dynamoDBFactory.buildDynamoDBEnhancedRepository()
 
@@ -33,7 +41,7 @@ class DefaultOrderRepository(
     override fun findOrderById(id: String): Order? {
         return dynamoDBRepository
             .findByPrimaryKeys("ORDER", id)
-            .toOrderOrNull()
+            ?.toOrder()
     }
 
     override fun findOrdersByProductName(productName: String): List<Order> {
@@ -64,26 +72,39 @@ class DefaultOrderRepository(
         dynamoDBEnhancedRepository.saveInTransaction(items)
     }
 
-    private fun MainTableEntity?.toOrderOrNull(): Order? {
-        this ?: return null
-        return Order(
-            id = this.sk,
-            productName = this.productName,
-            email = this.emailLsiSk,
-            amount = this.amount ?: 0,
-            place = this.place ?: 0,
+    override fun batchGetOrderAndEvent(
+        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+        eventPrimaryKeys: List<PrimaryKey<String, String>>
+    ): OrdersAndEvents {
+        val resources = listOf(
+            BatchResource(
+                MainTableEntity::class.java,
+                orderPrimaryKeys,
+            ),
+            BatchResource(
+                EventTableEntity::class.java,
+                eventPrimaryKeys,
+            ),
         )
-    }
+        val batchResponses = dynamoDBEnhancedRepository
+            .batchGetItems(resources)
+        val orders2 = batchResponses
+            .asSequence()
+            .flatMap { it.items.asSequence() }
+            .filterIsInstance<MainTableEntity>()
+            .map { it.toOrder() }
+            .toList()
 
-    private fun List<MainTableEntity>.toOrders(): List<Order> {
-        return this.map {
-            Order(
-                id = it.sk,
-                productName = it.productName,
-                email = it.emailLsiSk,
-                amount = it.amount ?: 0,
-                place = it.place ?: 0,
-            )
-        }
+        val events = batchResponses
+            .asSequence()
+            .flatMap { it.items.asSequence() }
+            .filterIsInstance<EventTableEntity>()
+            .map { it.toEvent() }
+            .toList()
+
+        return OrdersAndEvents(
+            orders = orders2,
+            events = events,
+        )
     }
 }
