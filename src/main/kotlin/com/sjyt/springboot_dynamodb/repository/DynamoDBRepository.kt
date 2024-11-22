@@ -5,14 +5,10 @@ import com.sjyt.springboot_dynamodb.extension.setPK
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.extension.toEntities
 import com.sjyt.springboot_dynamodb.model.SecondaryIndex
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
-import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedRequest
-import software.amazon.awssdk.enhanced.dynamodb.model.TransactWriteItemsEnhancedResponse
 
 interface NoSQLRepository<Table : TableEntity> {
     fun findAll(): List<Table>
