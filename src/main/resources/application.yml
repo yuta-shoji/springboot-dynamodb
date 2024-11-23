@@ -7,3 +7,4 @@ spring:
 dynamodb:
   endpoint: ${DYNAMODB_ENDPOINT}
   region: ${DYNAMODB_REGION}
+  table-name-suffix: ${DYNAMODB_TABLE_NAME_SUFFIX}

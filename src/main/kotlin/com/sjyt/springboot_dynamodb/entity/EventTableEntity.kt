@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.entity
 
+import com.sjyt.springboot_dynamodb.annotation.DynamoDBTableEntity
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
@@ -7,6 +8,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.time.LocalDateTime
 
+@DynamoDBTableEntity
 @DynamoDbBean
 data class EventTableEntity(
     @get:DynamoDbPartitionKey

@@ -1,21 +1,21 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.model.User
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 
-interface UserRepository: BaseRepository {
+interface UserRepository {
     fun findAllUsers(): List<User>
     fun findUserByEmail(email: String): User?
 }
 
 @Repository
 class DefaultUserRepository(
-    dynamoDBFactory: NoSQLFactory<MainTableEntity>,
+    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
+    @Qualifier("mainTableRepository")
+    private val dynamoDBRepository: DynamoDBRepository<MainTableEntity>
 ): UserRepository {
-    override val dynamoDBRepository = dynamoDBFactory.buildDynamoDBRepository(MainTableEntity::class.java)
-
     override fun findAllUsers(): List<User> {
         return dynamoDBRepository
             .findAllByPK("USER")

@@ -1,13 +1,13 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.config.dynamodb.NoSQLFactory
 import com.sjyt.springboot_dynamodb.entity.*
 import com.sjyt.springboot_dynamodb.model.*
-import com.sjyt.springboot_dynamodb.model.request.BatchResource
 import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
+import jakarta.annotation.PostConstruct
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 
-interface OrderRepository : BaseRepository, EnhancedRepository {
+interface OrderRepository {
     fun findAllOrders(): List<Order>
     fun findOrderById(id: String): Order?
     fun findOrdersByProductName(productName: String): List<Order>
@@ -27,11 +27,10 @@ data class OrdersAndEvents(
 
 @Repository
 class DefaultOrderRepository(
-    dynamoDBFactory: NoSQLFactory<MainTableEntity>,
+    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
+    @Qualifier("mainTableRepository")
+    private val dynamoDBRepository: DynamoDBRepository<MainTableEntity>,
 ) : OrderRepository {
-    override val dynamoDBRepository = dynamoDBFactory.buildDynamoDBRepository(MainTableEntity::class.java)
-    override val dynamoDBEnhancedRepository: NoSQLEnhancedRepository = dynamoDBFactory.buildDynamoDBEnhancedRepository()
-
     override fun findAllOrders(): List<Order> {
         return dynamoDBRepository
             .findAllByPK("ORDER")
