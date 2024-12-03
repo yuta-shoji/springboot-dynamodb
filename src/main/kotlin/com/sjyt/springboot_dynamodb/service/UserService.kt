@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 interface UserService {
     fun findAllUsers(): List<User>
     fun findUserByEmail(email: String): User?
+    fun saveUser(user: User)
 }
 
 @Service
@@ -21,5 +22,9 @@ class DefaultUserService(
     override fun findUserByEmail(email: String): User? {
         // Implement some business logic here
         return userRepository.findUserByEmail(email)
+    }
+
+    override fun saveUser(user: User) {
+        userRepository.saveUser(user)
     }
 }

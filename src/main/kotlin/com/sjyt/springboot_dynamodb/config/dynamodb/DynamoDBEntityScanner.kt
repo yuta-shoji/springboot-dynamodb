@@ -1,8 +1,8 @@
 package com.sjyt.springboot_dynamodb.config.dynamodb
 
-import com.sjyt.springboot_dynamodb.annotation.DynamoDBTableEntity
 import com.sjyt.springboot_dynamodb.entity.TableEntity
 import org.springframework.stereotype.Component
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 import java.io.File
 import java.net.URL
 
@@ -54,7 +54,7 @@ class DynamoDBEntityScanner {
 
     // アノテーションと型を確認
     private fun hasValidAnnotationAndType(clazz: Class<*>): Boolean {
-        val classIsAnnotation = clazz.isAnnotationPresent(DynamoDBTableEntity::class.java)
+        val classIsAnnotation = clazz.isAnnotationPresent(DynamoDbBean::class.java)
         val isAssignableFrom = TableEntity::class.java.isAssignableFrom(clazz)
 
         return classIsAnnotation && isAssignableFrom

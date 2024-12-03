@@ -16,13 +16,14 @@ interface EventRepository {
         startDate: LocalDateTime,
         endDate: LocalDateTime
     ): List<Event>
+    fun saveEvent(event: Event)
 }
 
 @Repository
 class DefaultEventRepository(
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
     @Qualifier("eventTableRepository")
-    private val dynamoDBRepository: DynamoDBRepository<EventTableEntity>
+    private val dynamoDBRepository: NoSQLRepository<EventTableEntity>
 ) : EventRepository {
     override fun findAllEvents(): List<Event> {
         return dynamoDBRepository.findAll().toEvents()
@@ -40,5 +41,9 @@ class DefaultEventRepository(
                 endDate.toString(),
             )
             .toEvents()
+    }
+
+    override fun saveEvent(event: Event) {
+        dynamoDBRepository.save(event.toEventTableEntity())
     }
 }

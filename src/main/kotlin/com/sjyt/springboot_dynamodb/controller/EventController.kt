@@ -4,6 +4,7 @@ import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventsByEventTypeAndDatesBetweenRequestBody
 import com.sjyt.springboot_dynamodb.model.EventType
 import com.sjyt.springboot_dynamodb.service.EventService
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -27,5 +28,11 @@ class EventController(
                 eventBody.startDate,
                 eventBody.endDate,
             )
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun saveEvent(@RequestBody event: Event) {
+        eventService.saveEvent(event)
     }
 }

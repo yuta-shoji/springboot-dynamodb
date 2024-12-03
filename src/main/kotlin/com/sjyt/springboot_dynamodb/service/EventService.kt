@@ -13,6 +13,7 @@ interface EventService {
         startDate: LocalDateTime,
         endDate: LocalDateTime
     ): List<Event>
+    fun saveEvent(event: Event)
 }
 
 @Service
@@ -34,5 +35,9 @@ class DefaultEventService(
                 startDate,
                 endDate,
             )
+    }
+
+    override fun saveEvent(event: Event) {
+        eventRepository.saveEvent(event)
     }
 }

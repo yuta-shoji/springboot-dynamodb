@@ -13,11 +13,11 @@ interface OrderService {
     fun findOrdersByProductName(productName: String): List<Order>
     fun findOrdersByUserEmail(email: String): List<Order>
     fun saveOrder(order: Order)
-    fun saveOrderAndEventInTransact(order: Order, event: Event)
-    fun batchGetOrderAndEvent(
-        orderPrimaryKeys: List<PrimaryKey<String, String>>,
-        eventPrimaryKeys: List<PrimaryKey<String, String>>,
-    ): OrdersAndEvents
+//    fun saveOrderAndEventInTransact(order: Order, event: Event)
+//    fun batchGetOrderAndEvent(
+//        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+//        eventPrimaryKeys: List<PrimaryKey<String, String>>,
+//    ): OrdersAndEvents
 }
 
 @Service
@@ -49,16 +49,16 @@ class DefaultOrderService(
         orderRepository.saveOrder(order)
     }
 
-    override fun saveOrderAndEventInTransact(order: Order, event: Event) {
-        // Implement some business logic here
-        orderRepository.saveOrderAndEventInTransact(order, event)
-    }
-
-    override fun batchGetOrderAndEvent(
-        orderPrimaryKeys: List<PrimaryKey<String, String>>,
-        eventPrimaryKeys: List<PrimaryKey<String, String>>
-    ): OrdersAndEvents {
-        return orderRepository
-            .batchGetOrderAndEvent(orderPrimaryKeys, eventPrimaryKeys)
-    }
+//    override fun saveOrderAndEventInTransact(order: Order, event: Event) {
+//        // Implement some business logic here
+//        orderRepository.saveOrderAndEventInTransact(order, event)
+//    }
+//
+//    override fun batchGetOrderAndEvent(
+//        orderPrimaryKeys: List<PrimaryKey<String, String>>,
+//        eventPrimaryKeys: List<PrimaryKey<String, String>>
+//    ): OrdersAndEvents {
+//        return orderRepository
+//            .batchGetOrderAndEvent(orderPrimaryKeys, eventPrimaryKeys)
+//    }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository
 interface UserRepository {
     fun findAllUsers(): List<User>
     fun findUserByEmail(email: String): User?
+    fun saveUser(user: User)
 }
 
 @Repository
@@ -28,6 +29,9 @@ class DefaultUserRepository(
             .toUserOrNull()
     }
 
+    override fun saveUser(user: User) {
+        dynamoDBRepository.save(user.toMainTableEntity())
+    }
 
     private fun MainTableEntity?.toUserOrNull(): User? {
         this ?: return null

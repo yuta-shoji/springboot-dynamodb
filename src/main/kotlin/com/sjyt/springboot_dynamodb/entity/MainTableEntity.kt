@@ -1,10 +1,8 @@
 package com.sjyt.springboot_dynamodb.entity
 
-import com.sjyt.springboot_dynamodb.annotation.DynamoDBTableEntity
 import com.sjyt.springboot_dynamodb.model.Order
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*
 
-@DynamoDBTableEntity
 @DynamoDbBean
 data class MainTableEntity(
     @get:DynamoDbPartitionKey
