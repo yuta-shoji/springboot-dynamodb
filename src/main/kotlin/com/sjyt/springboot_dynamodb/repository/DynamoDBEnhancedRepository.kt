@@ -4,9 +4,10 @@ import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.request.BatchResource
 import com.sjyt.springboot_dynamodb.model.response.BatchResponse
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.Key
-import software.amazon.awssdk.enhanced.dynamodb.MappedTableResource
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch
 
@@ -15,16 +16,18 @@ interface NoSQLEnhancedRepository {
     fun batchGetItems(resources: List<BatchResource<*, *>>): List<BatchResponse>
 }
 
+@Repository
 class DynamoDBEnhancedRepository(
-    private val environment: String,
     private val dynamoDbEnhancedClient: DynamoDbEnhancedClient,
+    @Value("\${dynamodb.table-name-suffix}")
+    private val tableNameSuffix: String,
 ) : NoSQLEnhancedRepository {
     override fun saveInTransaction(items: List<TableEntity>) {
         dynamoDbEnhancedClient.transactWriteItems {
             items.forEach { item ->
                 val instance = item.javaClass.getConstructor().newInstance()
                 val dynamoDBTable = dynamoDbEnhancedClient.table(
-                    "${instance.tableName}_$environment",
+                    "${instance.tableName}_$tableNameSuffix",
                     TableSchema.fromBean(item.javaClass)
                 )
                 it.addPutItem(dynamoDBTable, item)
@@ -38,12 +41,13 @@ class DynamoDBEnhancedRepository(
         val readBatches = resources.map { resource ->
             val instance = resource.tableEntity.getConstructor().newInstance()
             val dynamoDBTable = dynamoDbEnhancedClient.table(
-                "${instance.tableName}_$environment",
-                TableSchema.fromClass(resource.tableEntity)
+                "${instance.tableName}_$tableNameSuffix",
+                @Suppress("UNCHECKED_CAST")
+                TableSchema.fromBean(resource.tableEntity as Class<TableEntity>)
             )
             val readBatchBuilder = ReadBatch
                 .builder(resource.tableEntity)
-                .mappedTableResource(dynamoDBTable as MappedTableResource<TableEntity>)
+                .mappedTableResource(dynamoDBTable)
 
             resource.primaryKeys.forEach { primaryKey ->
                 readBatchBuilder.addGetItem(
@@ -63,7 +67,7 @@ class DynamoDBEnhancedRepository(
         return resources.map { resource ->
             val instance = resource.tableEntity.getConstructor().newInstance()
             val dynamoDBTable = dynamoDbEnhancedClient.table(
-                "${instance.tableName}_$environment",
+                "${instance.tableName}_$tableNameSuffix",
                 TableSchema.fromBean(resource.tableEntity)
             )
 
