@@ -1,23 +1,30 @@
 package com.sjyt.springboot_dynamodb.config.dynamodb
 
+import com.sjyt.springboot_dynamodb.RootPackageDetector
 import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.repository.NoSQLRepository
 import jakarta.annotation.PostConstruct
+import org.reflections.Reflections
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.beans.factory.support.GenericBeanDefinition
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Configuration
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 
 @Configuration
-class DynamicNoSQLRepositoryConfig(
+class DynamicDynamoDBRepositoryBeanRegistrar(
     private val dynamoDBRepositoryFactory: DynamoDBRepositoryFactory,
     private val applicationContext: ConfigurableApplicationContext,
-    private val dynamoDBEntityScanner: DynamoDBEntityScanner,
+    private val rootPackageDetector: RootPackageDetector,
 ) {
     @PostConstruct
     fun registerRepositories() {
-        val packageToScan = "com.sjyt.springboot_dynamodb.entity"
-        val tableEntities = dynamoDBEntityScanner.findAnnotatedClassesInPackage(packageToScan)
+        val rootPackage = rootPackageDetector.getRootPackage()
+
+        val reflections = Reflections(rootPackage)
+        val tableEntities = reflections
+            .getTypesAnnotatedWith(DynamoDbBean::class.java)
+            .filterIsInstance<Class<TableEntity>>()
 
         tableEntities.forEach { entityClass ->
             val repositoryBean = dynamoDBRepositoryFactory.create(entityClass)

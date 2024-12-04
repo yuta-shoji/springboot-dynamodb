@@ -10,8 +10,8 @@ data class User(
     fun toMainTableEntity(): MainTableEntity {
         return MainTableEntity(
             pk = "USER",
-            sk = "-",
-            emailLsiSk = email,
+            sk = email,
+            emailLsiSk = "",
             userName = name,
             age = age,
         )
