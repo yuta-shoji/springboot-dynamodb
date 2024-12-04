@@ -14,7 +14,7 @@ interface UserRepository {
 @Repository
 class DefaultUserRepository(
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("mainTableRepository")
+    @Qualifier("mainTableEntity")
     private val dynamoDBRepository: DynamoDBRepository<MainTableEntity>
 ): UserRepository {
     override fun findAllUsers(): List<User> {

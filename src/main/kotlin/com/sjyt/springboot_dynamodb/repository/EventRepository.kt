@@ -4,7 +4,6 @@ import com.sjyt.springboot_dynamodb.entity.EventTableEntity
 import com.sjyt.springboot_dynamodb.entity.toEvents
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
-import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -22,7 +21,7 @@ interface EventRepository {
 @Repository
 class DefaultEventRepository(
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("eventTableRepository")
+    @Qualifier("eventTableEntity")
     private val dynamoDBRepository: NoSQLRepository<EventTableEntity>
 ) : EventRepository {
     override fun findAllEvents(): List<Event> {

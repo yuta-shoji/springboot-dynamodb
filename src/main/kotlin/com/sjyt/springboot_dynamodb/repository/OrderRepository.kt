@@ -1,8 +1,12 @@
 package com.sjyt.springboot_dynamodb.repository
 
-import com.sjyt.springboot_dynamodb.entity.*
-import com.sjyt.springboot_dynamodb.model.*
-import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
+import com.sjyt.springboot_dynamodb.entity.MainTableEntity
+import com.sjyt.springboot_dynamodb.entity.toOrder
+import com.sjyt.springboot_dynamodb.entity.toOrders
+import com.sjyt.springboot_dynamodb.model.Event
+import com.sjyt.springboot_dynamodb.model.GSI
+import com.sjyt.springboot_dynamodb.model.LSI
+import com.sjyt.springboot_dynamodb.model.Order
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 
@@ -27,7 +31,7 @@ data class OrdersAndEvents(
 @Repository
 class DefaultOrderRepository(
     @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("mainTableRepository")
+    @Qualifier("mainTableEntity")
     private val dynamoDBRepository: NoSQLRepository<MainTableEntity>,
 ) : OrderRepository {
     override fun findAllOrders(): List<Order> {

@@ -34,10 +34,10 @@ class DynamicDynamoDBRepositoryBeanRegistrar(
 
     private fun <T : TableEntity> registerRepositoryBean(
         entityClass: Class<T>,
-        repositoryBean: NoSQLRepository<T>
+        repositoryBean: NoSQLRepository<T>,
     ) {
         val beanFactory = applicationContext.beanFactory as DefaultListableBeanFactory
-        val beanName = "${entityClass.simpleName.replace("Entity", "").replaceFirstChar { it.lowercase() }}Repository"
+        val beanName = entityClass.simpleName.replaceFirstChar { it.lowercase() }
 
         val beanDefinition = GenericBeanDefinition().apply {
             setBeanClass(NoSQLRepository::class.java)
