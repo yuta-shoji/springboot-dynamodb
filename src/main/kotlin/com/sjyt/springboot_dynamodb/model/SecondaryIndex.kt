@@ -23,7 +23,6 @@ data class GSI<PK, SK>(
     }
 }
 
-
 data class LSI<PK, SK>(
     override val indexName: String,
     override val pk: PK,

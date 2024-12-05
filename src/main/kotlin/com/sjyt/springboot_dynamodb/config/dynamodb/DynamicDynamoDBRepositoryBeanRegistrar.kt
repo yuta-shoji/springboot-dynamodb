@@ -8,10 +8,10 @@ import org.reflections.Reflections
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.beans.factory.support.GenericBeanDefinition
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Component
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean
 
-@Configuration
+@Component
 class DynamicDynamoDBRepositoryBeanRegistrar(
     private val dynamoDBRepositoryFactory: DynamoDBRepositoryFactory,
     private val applicationContext: ConfigurableApplicationContext,
