@@ -4,8 +4,6 @@ import com.sjyt.springboot_dynamodb.entity.TableEntity
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.model.request.BatchResource
 import com.sjyt.springboot_dynamodb.model.response.BatchResponse
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
@@ -16,10 +14,8 @@ interface NoSQLEnhancedRepository {
     fun batchGetItems(resources: List<BatchResource<*, *>>): List<BatchResponse>
 }
 
-@Repository
-class DynamoDBEnhancedRepository(
+abstract class DynamoDBEnhancedRepository(
     private val dynamoDbEnhancedClient: DynamoDbEnhancedClient,
-    @Value("\${dynamodb.table-name-suffix}")
     private val tableNameSuffix: String,
 ) : NoSQLEnhancedRepository {
     override fun saveInTransaction(items: List<TableEntity>) {

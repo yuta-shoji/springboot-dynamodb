@@ -4,8 +4,9 @@ import com.sjyt.springboot_dynamodb.entity.EventTableEntity
 import com.sjyt.springboot_dynamodb.entity.toEvents
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import java.time.LocalDateTime
 
 interface EventRepository {
@@ -20,12 +21,18 @@ interface EventRepository {
 
 @Repository
 class DefaultEventRepository(
-    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("eventTableEntity")
-    private val dynamoDBRepository: NoSQLRepository<EventTableEntity>
-) : EventRepository {
+    dynamoDbEnhancedClient: DynamoDbEnhancedClient,
+    @Value("\${dynamodb.table-name-suffix}")
+    tableNameSuffix: String,
+) :
+    EventRepository,
+    DynamoDBRepository<EventTableEntity>(
+        dynamoDbEnhancedClient,
+        tableNameSuffix
+    )
+{
     override fun findAllEvents(): List<Event> {
-        return dynamoDBRepository.findAll().toEvents()
+        return this.findAll().toEvents()
     }
 
     override fun findEventsByEventTypeAndDatesBetween(
@@ -33,7 +40,7 @@ class DefaultEventRepository(
         startDate: LocalDateTime,
         endDate: LocalDateTime
     ): List<Event> {
-        return dynamoDBRepository
+        return this
             .findAllByPKAndSKBetween(
                 eventType.toString(),
                 startDate.toString(),
@@ -43,6 +50,6 @@ class DefaultEventRepository(
     }
 
     override fun saveEvent(event: Event) {
-        dynamoDBRepository.save(event.toEventTableEntity())
+        this.save(event.toEventTableEntity())
     }
 }

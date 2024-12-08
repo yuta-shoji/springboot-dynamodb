@@ -7,8 +7,9 @@ import com.sjyt.springboot_dynamodb.model.LSI
 import com.sjyt.springboot_dynamodb.model.Order
 import com.sjyt.springboot_dynamodb.model.request.BatchResource
 import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 interface OrderRepository {
     fun findAllOrders(): List<Order>
@@ -30,19 +31,21 @@ data class OrdersAndEvents(
 
 @Repository
 class DefaultOrderRepository(
-    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("mainTableEntity")
-    private val dynamoDBRepository: NoSQLRepository<MainTableEntity>,
-    private val dynamoDBEnhancedRepository: NoSQLEnhancedRepository
-) : OrderRepository {
+    dynamoDbEnhancedClient: DynamoDbEnhancedClient,
+    @Value("\${dynamodb.table-name-suffix}")
+    tableNameSuffix: String,
+) :
+    OrderRepository,
+    DynamoDBRepository<MainTableEntity>(dynamoDbEnhancedClient, tableNameSuffix)
+{
     override fun findAllOrders(): List<Order> {
-        return dynamoDBRepository
+        return this
             .findAllByPK("ORDER")
             .toOrders()
     }
 
     override fun findOrderById(id: String): Order? {
-        return dynamoDBRepository
+        return this
             .findByPrimaryKeys("ORDER", id)
             ?.toOrder()
     }
@@ -50,7 +53,7 @@ class DefaultOrderRepository(
     override fun findOrdersByProductName(productName: String): List<Order> {
         val gsi = GSI.withoutSk("ProductNameGSI", productName)
 
-        return dynamoDBRepository
+        return this
             .findAllByGSI(gsi)
             .toOrders()
     }
@@ -58,13 +61,13 @@ class DefaultOrderRepository(
     override fun findOrdersByUserEmail(email: String): List<Order> {
         val lsi = LSI("EmailLSI", "ORDER", email)
 
-        return dynamoDBRepository
+        return this
             .findAllByLSI(lsi)
             .toOrders()
     }
 
     override fun saveOrder(order: Order) {
-        dynamoDBRepository.save(order.toMainTableEntity())
+        this.save(order.toMainTableEntity())
     }
 
     override fun saveOrderAndEventInTransact(order: Order, event: Event) {
@@ -72,7 +75,7 @@ class DefaultOrderRepository(
             order.toMainTableEntity(),
             event.toEventTableEntity(),
         )
-        dynamoDBEnhancedRepository.saveInTransaction(items)
+        this.saveInTransaction(items)
     }
 
     override fun batchGetOrderAndEvent(
@@ -89,7 +92,7 @@ class DefaultOrderRepository(
                 eventPrimaryKeys,
             ),
         )
-        val batchResponses = dynamoDBEnhancedRepository
+        val batchResponses = this
             .batchGetItems(resources)
         val orders2 = batchResponses
             .asSequence()

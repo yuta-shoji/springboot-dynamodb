@@ -5,10 +5,13 @@ import com.sjyt.springboot_dynamodb.extension.setPK
 import com.sjyt.springboot_dynamodb.extension.setPrimaryKeys
 import com.sjyt.springboot_dynamodb.extension.toEntities
 import com.sjyt.springboot_dynamodb.model.SecondaryIndex
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Key
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
+import java.lang.reflect.ParameterizedType
 
 interface NoSQLRepository<Table : TableEntity> {
     fun findAll(): List<Table>
@@ -30,9 +33,27 @@ interface NoSQLRepository<Table : TableEntity> {
     fun delete(item: Table)
 }
 
-class DynamoDBRepository<Table : TableEntity>(
-    private val dynamoDbTable: DynamoDbTable<Table>,
-) : NoSQLRepository<Table> {
+abstract class DynamoDBRepository<Table : TableEntity>(
+    dynamoDbEnhancedClient: DynamoDbEnhancedClient,
+    tableNameSuffix: String,
+) :
+    NoSQLRepository<Table>,
+    DynamoDBEnhancedRepository(
+        dynamoDbEnhancedClient,
+        tableNameSuffix
+    )
+{
+    private val dynamoDbTable: DynamoDbTable<Table>
+
+    init {
+        @Suppress("UNCHECKED_CAST")
+        val tableEntityClass: Class<Table> = (javaClass.genericSuperclass as ParameterizedType)
+            .actualTypeArguments[0] as Class<Table>
+
+        val tableName = "${tableEntityClass.getDeclaredConstructor().newInstance().tableName}_$tableNameSuffix"
+        this.dynamoDbTable = dynamoDbEnhancedClient.table(tableName, TableSchema.fromClass(tableEntityClass))
+    }
+
     override fun findAll(): List<Table> {
         return dynamoDbTable
             .scan()

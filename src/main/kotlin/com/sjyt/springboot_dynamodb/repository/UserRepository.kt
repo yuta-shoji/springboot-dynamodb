@@ -2,8 +2,9 @@ package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.entity.MainTableEntity
 import com.sjyt.springboot_dynamodb.model.User
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 interface UserRepository {
     fun findAllUsers(): List<User>
@@ -13,24 +14,31 @@ interface UserRepository {
 
 @Repository
 class DefaultUserRepository(
-    @Suppress("SpringJavaInjectionPointsAutowiringInspection")
-    @Qualifier("mainTableEntity")
-    private val dynamoDBRepository: DynamoDBRepository<MainTableEntity>
-): UserRepository {
+    dynamoDbEnhancedClient: DynamoDbEnhancedClient,
+    @Value("\${dynamodb.table-name-suffix}")
+    tableNameSuffix: String,
+) :
+    UserRepository,
+    DynamoDBRepository<MainTableEntity>(
+        dynamoDbEnhancedClient,
+        tableNameSuffix
+    )
+{
+
     override fun findAllUsers(): List<User> {
-        return dynamoDBRepository
+        return this
             .findAllByPK("USER")
             .toUsers()
     }
 
     override fun findUserByEmail(email: String): User? {
-        return dynamoDBRepository
+        return this
             .findByPrimaryKeys("USER", email)
             .toUserOrNull()
     }
 
     override fun saveUser(user: User) {
-        dynamoDBRepository.save(user.toMainTableEntity())
+        this.save(user.toMainTableEntity())
     }
 
     private fun MainTableEntity?.toUserOrNull(): User? {
