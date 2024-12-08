@@ -19,7 +19,7 @@ class DefaultUserRepository(
     tableNameSuffix: String,
 ) :
     UserRepository,
-    DynamoDBRepository<MainTableEntity>(
+    DynamoDBRepository<MainTableEntity, String, String>(
         dynamoDbEnhancedClient,
         tableNameSuffix
     )

@@ -1,10 +1,12 @@
 package com.sjyt.springboot_dynamodb.service
 
+import com.sjyt.springboot_dynamodb.entity.toOrder
+import com.sjyt.springboot_dynamodb.entity.toOrders
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.model.OrdersAndEvents
 import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
 import com.sjyt.springboot_dynamodb.repository.OrderRepository
-import com.sjyt.springboot_dynamodb.repository.OrdersAndEvents
 import org.springframework.stereotype.Service
 
 interface OrderService {
@@ -26,22 +28,22 @@ class DefaultOrderService(
 ) : OrderService {
     override fun findAllOrders(): List<Order> {
         // Implement some business logic here
-        return orderRepository.findAllOrders()
+        return orderRepository.findAllOrders().toOrders()
     }
 
     override fun findOrderById(id: String): Order? {
         // Implement some business logic here
-        return orderRepository.findOrderById(id)
+        return orderRepository.findOrderById(id)?.toOrder()
     }
 
     override fun findOrdersByProductName(productName: String): List<Order> {
         // Implement some business logic here
-        return orderRepository.findOrdersByProductName(productName)
+        return orderRepository.findOrdersByProductName(productName).toOrders()
     }
 
     override fun findOrdersByUserEmail(email: String): List<Order> {
         // Implement some business logic here
-        return orderRepository.findOrdersByUserEmail(email)
+        return orderRepository.findOrdersByUserEmail(email).toOrders()
     }
 
     override fun saveOrder(order: Order) {
@@ -60,5 +62,6 @@ class DefaultOrderService(
     ): OrdersAndEvents {
         return orderRepository
             .batchGetOrderAndEvent(orderPrimaryKeys, eventPrimaryKeys)
+            .toOrdersAndEvents()
     }
 }

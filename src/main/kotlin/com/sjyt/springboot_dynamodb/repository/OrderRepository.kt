@@ -1,10 +1,7 @@
 package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.entity.*
-import com.sjyt.springboot_dynamodb.model.Event
-import com.sjyt.springboot_dynamodb.model.GSI
-import com.sjyt.springboot_dynamodb.model.LSI
-import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.model.*
 import com.sjyt.springboot_dynamodb.model.request.BatchResource
 import com.sjyt.springboot_dynamodb.model.request.PrimaryKey
 import org.springframework.beans.factory.annotation.Value
@@ -12,22 +9,17 @@ import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 interface OrderRepository {
-    fun findAllOrders(): List<Order>
-    fun findOrderById(id: String): Order?
-    fun findOrdersByProductName(productName: String): List<Order>
-    fun findOrdersByUserEmail(email: String): List<Order>
+    fun findAllOrders(): List<MainTableEntity>
+    fun findOrderById(id: String): MainTableEntity?
+    fun findOrdersByProductName(productName: String): List<MainTableEntity>
+    fun findOrdersByUserEmail(email: String): List<MainTableEntity>
     fun saveOrder(order: Order)
     fun saveOrderAndEventInTransact(order: Order, event: Event)
     fun batchGetOrderAndEvent(
         orderPrimaryKeys: List<PrimaryKey<String, String>>,
         eventPrimaryKeys: List<PrimaryKey<String, String>>,
-    ): OrdersAndEvents
+    ): MainAndEventTableEntities
 }
-
-data class OrdersAndEvents(
-    val orders: List<Order>,
-    val events: List<Event>,
-)
 
 @Repository
 class DefaultOrderRepository(
@@ -36,34 +28,30 @@ class DefaultOrderRepository(
     tableNameSuffix: String,
 ) :
     OrderRepository,
-    DynamoDBRepository<MainTableEntity>(dynamoDbEnhancedClient, tableNameSuffix)
+    DynamoDBRepository<MainTableEntity, String, String>(dynamoDbEnhancedClient, tableNameSuffix)
 {
-    override fun findAllOrders(): List<Order> {
+    override fun findAllOrders(): List<MainTableEntity> {
         return this
             .findAllByPK("ORDER")
-            .toOrders()
     }
 
-    override fun findOrderById(id: String): Order? {
+    override fun findOrderById(id: String): MainTableEntity? {
         return this
             .findByPrimaryKeys("ORDER", id)
-            ?.toOrder()
     }
 
-    override fun findOrdersByProductName(productName: String): List<Order> {
+    override fun findOrdersByProductName(productName: String): List<MainTableEntity> {
         val gsi = GSI.withoutSk("ProductNameGSI", productName)
 
         return this
             .findAllByGSI(gsi)
-            .toOrders()
     }
 
-    override fun findOrdersByUserEmail(email: String): List<Order> {
+    override fun findOrdersByUserEmail(email: String): List<MainTableEntity> {
         val lsi = LSI("EmailLSI", "ORDER", email)
 
         return this
             .findAllByLSI(lsi)
-            .toOrders()
     }
 
     override fun saveOrder(order: Order) {
@@ -81,7 +69,7 @@ class DefaultOrderRepository(
     override fun batchGetOrderAndEvent(
         orderPrimaryKeys: List<PrimaryKey<String, String>>,
         eventPrimaryKeys: List<PrimaryKey<String, String>>
-    ): OrdersAndEvents {
+    ): MainAndEventTableEntities {
         val resources = listOf(
             BatchResource(
                 MainTableEntity::class.java,
@@ -94,23 +82,21 @@ class DefaultOrderRepository(
         )
         val batchResponses = this
             .batchGetItems(resources)
-        val orders2 = batchResponses
+        val orders = batchResponses
             .asSequence()
             .flatMap { it.items.asSequence() }
             .filterIsInstance<MainTableEntity>()
-            .map { it.toOrder() }
             .toList()
 
         val events = batchResponses
             .asSequence()
             .flatMap { it.items.asSequence() }
             .filterIsInstance<EventTableEntity>()
-            .map { it.toEvent() }
             .toList()
 
-        return OrdersAndEvents(
-            orders = orders2,
-            events = events,
+        return MainAndEventTableEntities(
+            orders,
+            events,
         )
     }
 }

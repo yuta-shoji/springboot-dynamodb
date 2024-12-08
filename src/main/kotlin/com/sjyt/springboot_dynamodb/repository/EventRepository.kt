@@ -26,7 +26,7 @@ class DefaultEventRepository(
     tableNameSuffix: String,
 ) :
     EventRepository,
-    DynamoDBRepository<EventTableEntity>(
+    DynamoDBRepository<EventTableEntity, String, String>(
         dynamoDbEnhancedClient,
         tableNameSuffix
     )

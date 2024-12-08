@@ -2,7 +2,6 @@ package com.sjyt.springboot_dynamodb.controller
 
 import com.sjyt.springboot_dynamodb.model.*
 import com.sjyt.springboot_dynamodb.model.request.BatchRequestBodyWithOrderAndEvent
-import com.sjyt.springboot_dynamodb.repository.OrdersAndEvents
 import com.sjyt.springboot_dynamodb.service.OrderService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
