@@ -31,6 +31,14 @@ class OrderController(
         return orderService.findOrdersByUserEmail(email)
     }
 
+    @GetMapping("/events/batch")
+    fun batchGetOrderAndEvent(
+        @RequestBody body: BatchRequestBodyWithOrderAndEvent,
+    ): OrdersAndEvents {
+        return orderService
+            .batchGetOrderAndEvent(body.orderPrimaryKeys, body.eventPrimaryKeys)
+    }
+
     @PutMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun saveNewOrder(@RequestBody body: OrderRequestBody) {
@@ -46,13 +54,5 @@ class OrderController(
             body.order.toOrder(),
             body.event.toEvent(),
         )
-    }
-
-    @GetMapping("/events/batch")
-    fun batchGetOrderAndEvent(
-        @RequestBody body: BatchRequestBodyWithOrderAndEvent,
-    ): OrdersAndEvents {
-        return orderService
-            .batchGetOrderAndEvent(body.orderPrimaryKeys, body.eventPrimaryKeys)
     }
 }
