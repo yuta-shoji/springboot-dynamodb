@@ -1,5 +1,6 @@
 package com.sjyt.springboot_dynamodb.service
 
+import com.sjyt.springboot_dynamodb.entity.toEvents
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
 import com.sjyt.springboot_dynamodb.repository.EventRepository
@@ -21,7 +22,7 @@ class DefaultEventService(
     private val eventRepository: EventRepository
 ): EventService {
     override fun findAllEvents(): List<Event> {
-        return eventRepository.findAllEvents()
+        return eventRepository.findAllEvents().toEvents()
     }
 
     override fun findEventsByEventTypeAndDatesBetween(
@@ -35,6 +36,7 @@ class DefaultEventService(
                 startDate,
                 endDate,
             )
+            .toEvents()
     }
 
     override fun saveEvent(event: Event) {

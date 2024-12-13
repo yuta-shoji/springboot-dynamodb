@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 
 interface UserRepository {
-    fun findAllUsers(): List<User>
-    fun findUserByEmail(email: String): User?
+    fun findAllUsers(): List<MainTableEntity>
+    fun findUserByEmail(email: String): MainTableEntity?
     fun saveUser(user: User)
 }
 
@@ -25,38 +25,17 @@ class DefaultUserRepository(
     )
 {
 
-    override fun findAllUsers(): List<User> {
+    override fun findAllUsers(): List<MainTableEntity> {
         return this
             .findAllByPK("USER")
-            .toUsers()
     }
 
-    override fun findUserByEmail(email: String): User? {
+    override fun findUserByEmail(email: String): MainTableEntity? {
         return this
             .findByPrimaryKeys("USER", email)
-            .toUserOrNull()
     }
 
     override fun saveUser(user: User) {
         this.save(user.toMainTableEntity())
-    }
-
-    private fun MainTableEntity?.toUserOrNull(): User? {
-        this ?: return null
-        return User(
-            name = this.userName ?: "",
-            email = this.sk,
-            age = this.age ?: 0
-        )
-    }
-
-    private fun List<MainTableEntity>.toUsers(): List<User> {
-        return this.map {
-            User(
-                name = it.userName ?: "",
-                email = it.sk,
-                age = it.age ?: 0
-            )
-        }
     }
 }

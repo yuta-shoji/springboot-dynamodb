@@ -1,7 +1,6 @@
 package com.sjyt.springboot_dynamodb.repository
 
 import com.sjyt.springboot_dynamodb.entity.EventTableEntity
-import com.sjyt.springboot_dynamodb.entity.toEvents
 import com.sjyt.springboot_dynamodb.model.Event
 import com.sjyt.springboot_dynamodb.model.EventType
 import org.springframework.beans.factory.annotation.Value
@@ -10,12 +9,12 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient
 import java.time.LocalDateTime
 
 interface EventRepository {
-    fun findAllEvents(): List<Event>
+    fun findAllEvents(): List<EventTableEntity>
     fun findEventsByEventTypeAndDatesBetween(
         eventType: EventType,
         startDate: LocalDateTime,
         endDate: LocalDateTime
-    ): List<Event>
+    ): List<EventTableEntity>
     fun saveEvent(event: Event)
 }
 
@@ -31,22 +30,21 @@ class DefaultEventRepository(
         tableNameSuffix
     )
 {
-    override fun findAllEvents(): List<Event> {
-        return this.findAll().toEvents()
+    override fun findAllEvents(): List<EventTableEntity> {
+        return this.findAll()
     }
 
     override fun findEventsByEventTypeAndDatesBetween(
         eventType: EventType,
         startDate: LocalDateTime,
         endDate: LocalDateTime
-    ): List<Event> {
+    ): List<EventTableEntity> {
         return this
             .findAllByPKAndSKBetween(
                 eventType.toString(),
                 startDate.toString(),
                 endDate.toString(),
             )
-            .toEvents()
     }
 
     override fun saveEvent(event: Event) {

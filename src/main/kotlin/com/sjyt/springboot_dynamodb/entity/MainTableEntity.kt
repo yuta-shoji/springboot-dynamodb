@@ -1,6 +1,7 @@
 package com.sjyt.springboot_dynamodb.entity
 
 import com.sjyt.springboot_dynamodb.model.Order
+import com.sjyt.springboot_dynamodb.model.User
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*
 
 @DynamoDbBean
@@ -21,7 +22,7 @@ data class MainTableEntity(
 
     var place: Int? = null,
 
-    var userName: String? = "",
+    var userName: String? = null,
 
     var age: Int? = null,
 ): TableEntity {
@@ -47,6 +48,24 @@ fun List<MainTableEntity>.toOrders(): List<Order> {
             email = it.emailLsiSk,
             amount = it.amount ?: 0,
             place = it.place ?: 0,
+        )
+    }
+}
+
+fun MainTableEntity.toUser(): User {
+    return User(
+        name = this.userName ?: "",
+        email = this.emailLsiSk,
+        age = this.age ?: 0
+    )
+}
+
+fun List<MainTableEntity>.toUsers(): List<User> {
+    return this.map {
+        User(
+            name = it.userName ?: "",
+            email = it.emailLsiSk,
+            age = it.age ?: 0
         )
     }
 }

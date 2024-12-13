@@ -7,8 +7,6 @@ services:
     command: -jar DynamoDBLocal.jar -dbPath /data -sharedDb
     volumes:
       - ./dynamodb-data:/data
-    networks:
-      - springboot-dynamodb-network
 
   dynamodb-admin:
     container_name: springboot-dynamodb-admin
@@ -19,10 +17,3 @@ services:
       - 8003:8001
     depends_on:
       - dynamodb-local
-    networks:
-      - springboot-dynamodb-network
-
-networks:
-  springboot-dynamodb-network:
-    name: springboot-dynamodb-network
-    driver: bridge
