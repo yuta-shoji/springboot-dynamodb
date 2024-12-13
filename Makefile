@@ -1,2 +1,2 @@
 start:
-	./gradlew bootrun
+	source .env && ./gradlew bootrun
